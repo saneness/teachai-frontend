@@ -1,26 +1,26 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div id="app-container" class="min-h-screen flex flex-col">
+    <SiteNavbar v-if="showNavbar" />
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <router-view />
+    </main>
+    <footer class="bg-gray-800 text-white text-center p-4">
+      <p>&copy; {{ new Date().getFullYear() }} Student Progress Tracker</p> <!-- Translated -->
+    </footer>
+  </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+<script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import SiteNavbar from './components/SiteNavbar.vue'; 
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+const route = useRoute();
+const showNavbar = computed(() => {
+  return !['Login', 'Register'].includes(route.name);
+});
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+/* Global styles */
 </style>
