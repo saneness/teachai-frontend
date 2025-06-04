@@ -4,10 +4,10 @@
       <button @click="closeModal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-600 hover:text-gray-800">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h2> <!-- Translated -->
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h2>
       <form @submit.prevent="submitForm">
         <div class="mb-4">
-          <label for="className" class="block text-gray-700 text-sm font-semibold mb-2">Class Name:</label> <!-- Translated -->
+          <label for="className" class="block text-gray-700 text-sm font-semibold mb-2">Class Name:</label>
           <input
             type="text"
             id="className"
@@ -16,18 +16,36 @@
             class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        
         <div class="mb-4">
-          <label for="programName" class="block text-gray-700 text-sm font-semibold mb-2">Program Name (optional):</label> <!-- Translated -->
-          <input
-            type="text"
-            id="programName"
-            v-model="editableClass.program_name"
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label for="programName" class="block text-gray-700 text-sm font-semibold mb-2">Program:</label>
+          <div v-if="isEditing" class="p-3 bg-gray-100 rounded-md text-gray-700">
+            {{ editableClass.program_name || 'Not assigned' }} 
+            <span class="text-xs text-gray-500 ml-2">(Cannot be changed after creation)</span>
+          </div>
+          <div v-else>
+            <select
+              id="programName"
+              v-model="editableClass.program_name"
+              class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="availablePrograms.length === 0 && !isProgramsLoading"
+              required 
+            >
+              <option v-if="isProgramsLoading" :value="null" disabled>Loading programs...</option>
+              <option v-else-if="availablePrograms.length === 0" :value="null" disabled>No programs available. Create one first.</option>
+              <option v-for="program in availablePrograms" :key="program.id" :value="program.name">
+                {{ program.name }}
+              </option>
+            </select>
+            <p v-if="!isEditing && availablePrograms.length === 0 && !isProgramsLoading" class="text-xs text-red-500 mt-1">
+                You need to create a program before you can assign it to a class.
+            </p>
+          </div>
         </div>
+
         <div class="mb-6">
           <label for="students" class="block text-gray-700 text-sm font-semibold mb-2">
-            Students (one name per line): <!-- Translated -->
+            Students (one name per line):
           </label>
           <textarea
             id="students"
@@ -35,10 +53,10 @@
             rows="5"
             class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="John Doe&#10;Jane Smith&#10;Peter Jones" 
-          ></textarea> <!-- Translated placeholder -->
+          ></textarea>
         </div>
-        <div v-if="errorMessage" class="mb-4 text-red-500 text-sm">
-          {{ errorMessage }}
+        <div v-if="formError" class="mb-4 text-red-500 text-sm">
+          {{ formError }}
         </div>
         <div class="flex justify-end space-x-3">
           <button
@@ -46,15 +64,15 @@
             @click="closeModal"
             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
-            Cancel <!-- Translated -->
+            Cancel
           </button>
           <button
             type="submit"
-            :disabled="isLoading"
+            :disabled="isLoading || (!isEditing && availablePrograms.length === 0)"
             class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            <span v-if="isLoading">Saving...</span> <!-- Translated -->
-            <span v-else>{{ isEditing ? 'Save Changes' : 'Create Class' }}</span> <!-- Translated -->
+            <span v-if="isLoading">Saving...</span>
+            <span v-else>{{ isEditing ? 'Save Changes' : 'Create Class' }}</span>
           </button>
         </div>
       </form>
@@ -82,14 +100,39 @@ const emit = defineEmits(['close', 'class-saved']);
 const editableClass = ref({
   id: null,
   name: '',
-  program_name: '',
+  program_name: null, 
   students: [], 
 });
 const studentsText = ref(''); 
-const errorMessage = ref('');
+const formError = ref(''); 
 const isLoading = ref(false);
+const availablePrograms = ref([]);
+const isProgramsLoading = ref(false); // Флаг для загрузки программ
 
-onMounted(() => {
+const fetchAvailablePrograms = async () => {
+  isProgramsLoading.value = true;
+  formError.value = ''; // Сбрасываем ошибку перед загрузкой
+  try {
+    const response = await apiClient.get('/programs');
+    availablePrograms.value = response.data;
+    // Если создаем новый класс и программы есть, выбираем первую по умолчанию
+    if (!props.isEditing && availablePrograms.value.length > 0) {
+      editableClass.value.program_name = availablePrograms.value[0].name;
+    } else if (!props.isEditing && availablePrograms.value.length === 0) {
+        editableClass.value.program_name = null; // Убедимся, что null, если программ нет
+        formError.value = "No programs available. Please create a program first to assign to the class.";
+    }
+  } catch (error) {
+    console.error("Failed to fetch programs:", error);
+    formError.value = "Could not load available programs."; 
+  } finally {
+    isProgramsLoading.value = false;
+  }
+};
+
+onMounted(async () => { // Делаем onMounted асинхронным
+  await fetchAvailablePrograms(); // Дожидаемся загрузки программ
+  
   if (props.isEditing && props.classToEdit) {
     editableClass.value = { ...props.classToEdit }; 
     if (props.classToEdit.students && Array.isArray(props.classToEdit.students)) {
@@ -97,8 +140,19 @@ onMounted(() => {
     } else {
         studentsText.value = '';
     }
-  } else {
-    editableClass.value = { id: null, name: '', program_name: '', students: [] };
+  } else { // Режим создания
+    // Если editableClass уже был инициализирован с program_name после fetchAvailablePrograms,
+    // не нужно его сбрасывать здесь, если программы есть.
+    // Если программ нет, program_name останется null.
+    if (!editableClass.value.program_name && availablePrograms.value.length > 0) {
+         editableClass.value.program_name = availablePrograms.value[0].name;
+    } else if (availablePrograms.value.length === 0) {
+        editableClass.value.program_name = null;
+    }
+    // Убедимся, что остальные поля сброшены для нового класса
+    editableClass.value.id = null;
+    editableClass.value.name = '';
+    editableClass.value.students = [];
     studentsText.value = '';
   }
 });
@@ -109,20 +163,36 @@ const closeModal = () => {
 };
 
 const submitForm = async () => {
-  if (!editableClass.value.name) {
-    errorMessage.value = 'Class name is required.'; // Translated
+  formError.value = ''; // Сбрасываем ошибку перед отправкой
+  if (!editableClass.value.name.trim()) {
+    formError.value = 'Class name is required.'; 
     return;
   }
+  // Проверка на выбор программы, если это не режим редактирования
+  if (!props.isEditing && !editableClass.value.program_name) {
+      formError.value = 'Program selection is required.';
+      return;
+  }
+   if (!props.isEditing && availablePrograms.value.length === 0) {
+      formError.value = 'Cannot create class: No programs available. Please create a program first.';
+      return;
+  }
+
+
   isLoading.value = true;
-  errorMessage.value = '';
 
   const studentNames = studentsText.value.split('\n').map(name => name.trim()).filter(name => name);
 
   const payload = {
     name: editableClass.value.name,
-    program_name: editableClass.value.program_name,
+    program_name: editableClass.value.program_name, 
     students: studentNames, 
   };
+  // При редактировании program_name не отправляется или игнорируется бэкендом
+  if (props.isEditing) {
+      delete payload.program_name; // Не отправляем программу при редактировании класса
+  }
+
 
   try {
     if (props.isEditing) {
@@ -134,9 +204,11 @@ const submitForm = async () => {
     closeModal();
   } catch (error) {
     if (error.response && error.response.data && error.response.data.msg) {
-      errorMessage.value = error.response.data.msg; // Backend message
+      formError.value = error.response.data.msg; 
+    } else if (error.request) {
+      formError.value = 'Network Error: Could not connect to the server.';
     } else {
-      errorMessage.value = `Error ${props.isEditing ? 'updating' : 'creating'} class.`; // Translated
+      formError.value = `Error ${props.isEditing ? 'updating' : 'creating'} class.`; 
     }
     console.error('Class form error:', error);
   } finally {

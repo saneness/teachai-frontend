@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
-import DashboardView from '../views/DashboardView.vue';
+import DashboardView from '../views/DashboardView.vue'; // Это страница Классов
 import ClassDetailView from '../views/ClassDetailView.vue';
+import ProgramsView from '../views/ProgramsView.vue'; // НОВАЯ СТРАНИЦА для списка программ
+import ProgramDetailView from '../views/ProgramDetailView.vue'; // НОВАЯ СТРАНИЦА для деталей программы
 import NotFoundView from '../views/NotFoundView.vue';
 
 const routes = [
@@ -19,16 +21,35 @@ const routes = [
     meta: { requiresGuest: true }
   },
   {
-    path: '/',
-    name: 'Dashboard',
+    path: '/', // Главная страница теперь будет списком классов
+    name: 'Dashboard', // Оставим Dashboard для классов для обратной совместимости
     component: DashboardView,
     meta: { requiresAuth: true } 
+  },
+  {
+    path: '/classes', // Явный путь для классов, если нужен
+    name: 'Classes',
+    component: DashboardView, // Используем тот же компонент
+    meta: { requiresAuth: true }
   },
   {
     path: '/class/:id',
     name: 'ClassDetail',
     component: ClassDetailView,
     props: true, 
+    meta: { requiresAuth: true }
+  },
+  { // НОВЫЕ МАРШРУТЫ ДЛЯ ПРОГРАММ
+    path: '/programs',
+    name: 'Programs',
+    component: ProgramsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/program/:id',
+    name: 'ProgramDetail',
+    component: ProgramDetailView, // Пока будет заглушкой
+    props: true,
     meta: { requiresAuth: true }
   },
   {
@@ -49,7 +70,9 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
     next({ name: 'Login' });
   } else if (to.matched.some(record => record.meta.requiresGuest) && isAuthenticated) {
-    next({ name: 'Dashboard' });
+    // Если пользователь аутентифицирован и пытается зайти на гостевую страницу,
+    // перенаправляем его на главную (список классов)
+    next({ name: 'Dashboard' }); 
   } else {
     next();
   }

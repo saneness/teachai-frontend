@@ -6,8 +6,19 @@
           Progress Tracker
         </router-link>
         <div>
-          <router-link to="/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+          <router-link 
+            to="/classes" 
+            class="px-3 py-2 rounded-md text-sm font-medium"
+            :class="[$route.name === 'Dashboard' || $route.name === 'Classes' || $route.name === 'ClassDetail' ? 'bg-blue-700' : 'hover:bg-blue-700']"
+          >
             Classes
+          </router-link>
+          <router-link 
+            to="/programs" 
+            class="ml-4 px-3 py-2 rounded-md text-sm font-medium"
+            :class="[$route.name === 'Programs' || $route.name === 'ProgramDetail' ? 'bg-blue-700' : 'hover:bg-blue-700']"
+          >
+            Programs <!-- НОВАЯ ССЫЛКА -->
           </router-link>
           <button
             @click="logout"
