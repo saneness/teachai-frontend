@@ -20,94 +20,109 @@
 
       <h2 class="text-2xl font-semibold text-gray-700 mb-6">Program Lessons, Comments & Work</h2>
       
-      <div v-if="studentProgressData.program && studentProgressData.program.lessons && studentProgressData.program.lessons.length > 0">
+      <div v-if="studentProgressData.program && studentProgressData.program.lessons && studentProgressData.program.lessons.length > 0" class="space-y-3">
         <div 
             v-for="lesson in sortedProgramLessons" 
             :key="lesson.id" 
-            class="mb-8 p-4 border rounded-md shadow-sm bg-gray-50"
+            class="border rounded-md shadow-sm bg-gray-50 overflow-hidden"
         >
-          <!-- Информация об уроке -->
-          <div class="flex justify-between items-start mb-3">
+          <!-- Заголовок урока (кликабельный для раскрытия) -->
+          <div 
+            @click="toggleLessonPanel(lesson.id)"
+            class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+          >
             <div>
-                <h3 class="text-xl font-semibold text-gray-800">{{ lesson.topic }}</h3>
-                <p v-if="lesson.description" class="text-gray-600 mt-1 text-sm">{{ lesson.description }}</p>
-                <p class="text-xs text-gray-400 mt-1">Order: {{ lesson.order === null ? 'N/A' : lesson.order }}</p>
+              <h3 class="text-xl font-semibold text-gray-800">{{ lesson.topic }}</h3>
+              <p class="text-xs text-gray-400 mt-0.5">Order: {{ lesson.order === null ? 'N/A' : lesson.order }}</p>
             </div>
+            <!-- Иконка стрелки -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 transition-transform duration-300" 
+                 :class="{'rotate-180': activeLessonId === lesson.id}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
           
-          <!-- Комментарий учителя -->
-          <div class="mb-4">
-            <label :for="'comment-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Teacher's Comment:</label>
-            <textarea
-              :id="'comment-' + lesson.id"
-              v-model="lessonComments[lesson.id]"
-              rows="3"
-              class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add your comment here..."
-            ></textarea>
-            <button
-              @click="saveComment(lesson.id)"
-              :disabled="isSavingComment[lesson.id]"
-              class="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              <span v-if="isSavingComment[lesson.id]">Saving...</span>
-              <span v-else>Save Comment</span>
-            </button>
-            <p v-if="commentErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ commentErrors[lesson.id] }}</p>
-            <p v-if="commentSuccess[lesson.id]" class="text-xs text-green-500 mt-1">Comment saved!</p>
-          </div>
+          <!-- Раскрываемое содержимое урока -->
+          <div v-if="activeLessonId === lesson.id" class="p-4 border-t bg-white">
+            <!-- Удалена кнопка "свернуть" отсюда -->
 
-          <!-- Загруженные работы студента -->
-          <div class="border-t pt-4 mt-4">
-            <h4 class="text-md font-semibold text-gray-700 mb-2">Student's Work:</h4>
-            <div v-if="lesson.student_works && lesson.student_works.length > 0" class="space-y-2">
-              <div v-for="work in lesson.student_works" :key="work.id" class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
-                <div>
-                  <a :href="getWorkDownloadUrl(work.stored_filename)" 
-                     target="_blank" 
-                     class="text-blue-600 hover:underline font-medium"
-                     :download="work.original_filename"
-                     >
-                     {{ work.original_filename }}
-                  </a>
-                  <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
-                  <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
-                </div>
-                <button 
-                  @click="confirmDeleteWork(work)"
-                  class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100"
-                  title="Delete work"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                </button>
-              </div>
-            </div>
-            <p v-else class="text-sm text-gray-500 italic">No work uploaded for this lesson.</p>
-
-            <!-- Форма загрузки файла -->
-            <div class="mt-3">
-              <label :for="'file-upload-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Upload New Work:</label>
-              <input 
-                type="file" 
-                :id="'file-upload-' + lesson.id" 
-                @change="handleFileUpload($event, lesson.id)"
-                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-               <input 
-                type="text" 
-                v-model="fileDescriptions[lesson.id]"
-                placeholder="Optional: Work description"
-                class="mt-1 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-1.5 px-3 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-               />
+            <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm">{{ lesson.description }}</p> <!-- Убран mt-1, т.к. кнопка свернуть удалена -->
+            <p v-else class="text-gray-500 italic mb-4 text-sm">No description for this lesson.</p>
+            
+            <!-- Комментарий учителя -->
+            <div class="mb-4">
+              <label :for="'comment-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Teacher's Comment:</label>
+              <textarea
+                :id="'comment-' + lesson.id"
+                v-model="lessonComments[lesson.id]"
+                rows="3"
+                class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Add your comment here..."
+              ></textarea>
               <button
-                @click="uploadWork(lesson.id)"
-                :disabled="!selectedFiles[lesson.id] || isUploadingWork[lesson.id]"
-                class="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                @click="saveComment(lesson.id)"
+                :disabled="isSavingComment[lesson.id]"
+                class="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
               >
-                <span v-if="isUploadingWork[lesson.id]">Uploading...</span>
-                <span v-else>Upload</span>
+                <span v-if="isSavingComment[lesson.id]">Saving...</span>
+                <span v-else>Save Comment</span>
               </button>
-              <p v-if="uploadErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ uploadErrors[lesson.id] }}</p>
+              <p v-if="commentErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ commentErrors[lesson.id] }}</p>
+              <p v-if="commentSuccess[lesson.id]" class="text-xs text-green-500 mt-1">Comment saved!</p>
+            </div>
+
+            <!-- Загруженные работы студента -->
+            <div class="border-t pt-4 mt-4">
+              <h4 class="text-md font-semibold text-gray-700 mb-2">Student's Work:</h4>
+              <div v-if="lesson.student_works && lesson.student_works.length > 0" class="space-y-2">
+                <div v-for="work in lesson.student_works" :key="work.id" class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
+                  <div>
+                    <a :href="getWorkDownloadUrl(work.stored_filename)" 
+                       target="_blank" 
+                       class="text-blue-600 hover:underline font-medium"
+                       :download="work.original_filename"
+                       >
+                       {{ work.original_filename }}
+                    </a>
+                    <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
+                    <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
+                  </div>
+                  <button 
+                    @click="confirmDeleteWork(work)"
+                    class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100"
+                    title="Delete work"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                  </button>
+                </div>
+              </div>
+              <p v-else class="text-sm text-gray-500 italic">No work uploaded for this lesson.</p>
+
+              <!-- Форма загрузки файла -->
+              <div class="mt-3">
+                <label :for="'file-upload-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Upload New Work:</label>
+                <input 
+                  type="file" 
+                  :id="'file-upload-' + lesson.id" 
+                  @change="handleFileUpload($event, lesson.id)"
+                  class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                 <input 
+                  type="text" 
+                  v-model="fileDescriptions[lesson.id]"
+                  placeholder="Optional: Work description"
+                  class="mt-1 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-1.5 px-3 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 />
+                <button
+                  @click="uploadWork(lesson.id)"
+                  :disabled="!selectedFiles[lesson.id] || isUploadingWork[lesson.id]"
+                  class="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                  <span v-if="isUploadingWork[lesson.id]">Uploading...</span>
+                  <span v-else>Upload</span>
+                </button>
+                <p v-if="uploadErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ uploadErrors[lesson.id] }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -156,15 +171,17 @@ const isSavingComment = reactive({});
 const commentErrors = reactive({}); 
 const commentSuccess = reactive({}); 
 
-const selectedFiles = reactive({}); // { lessonId: File object }
-const fileDescriptions = reactive({}); // { lessonId: 'description text' }
-const isUploadingWork = reactive({}); // { lessonId: true/false }
-const uploadErrors = reactive({});   // { lessonId: 'error message' }
+const selectedFiles = reactive({});
+const fileDescriptions = reactive({});
+const isUploadingWork = reactive({});
+const uploadErrors = reactive({});   
 
 const showDeleteWorkConfirmModal = ref(false);
 const workToDelete = ref(null);
 
 const classIdFromRoute = computed(() => props.classId); 
+
+const activeLessonId = ref(null);
 
 const sortedProgramLessons = computed(() => {
   if (studentProgressData.value?.program?.lessons) {
@@ -223,7 +240,7 @@ const handleFileUpload = (event, lessonId) => {
   const file = event.target.files[0];
   if (file) {
     selectedFiles[lessonId] = file;
-    uploadErrors[lessonId] = ''; // Сброс ошибки при выборе нового файла
+    uploadErrors[lessonId] = ''; 
   }
 };
 
@@ -245,11 +262,10 @@ const uploadWork = async (lessonId) => {
     await apiClient.post(`/lessons/${lessonId}/students/${props.studentId}/upload_work`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    // Очистить поле выбора файла и описание после успешной загрузки
     document.getElementById(`file-upload-${lessonId}`).value = null; 
     selectedFiles[lessonId] = null;
     fileDescriptions[lessonId] = '';
-    fetchStudentProgress(); // Перезагрузить данные для отображения нового файла
+    fetchStudentProgress(); 
   } catch (err) {
     console.error(`Failed to upload work for lesson ${lessonId}:`, err);
     if (err.response?.data?.msg) { uploadErrors[lessonId] = err.response.data.msg; }
@@ -267,37 +283,37 @@ const confirmDeleteWork = (work) => {
 
 const deleteWork = async () => {
     if (!workToDelete.value) return;
-    // Добавить isDeletingWork[workToDelete.value.id] = true; если нужна индикация
     try {
         await apiClient.delete(`/student-works/${workToDelete.value.id}`);
-        fetchStudentProgress(); // Обновить список работ
+        fetchStudentProgress(); 
     } catch (err) {
         console.error('Failed to delete work:', err);
-        // Обработка ошибки
-        const lessonId = workToDelete.value.lesson_id; // Для отображения ошибки у правильного урока
+        const lessonId = workToDelete.value.lesson_id; 
         if (err.response?.data?.msg) { uploadErrors[lessonId] = err.response.data.msg; }
         else if (err.request) { uploadErrors[lessonId] = 'Network Error.'; }
         else { uploadErrors[lessonId] = 'Failed to delete work.'; }
     } finally {
         showDeleteWorkConfirmModal.value = false;
         workToDelete.value = null;
-        // isDeletingWork[workToDelete.value.id] = false;
     }
 };
 
 const getWorkDownloadUrl = (storedFilename) => {
-    // Формируем URL для скачивания. Убедитесь, что токен будет добавлен интерцептором Axios,
-    // или этот эндпоинт должен быть доступен без JWT, если файлы публичны (что маловероятно).
-    // Для скачивания через <a> лучше использовать прямой URL, если сервер это поддерживает
-    // и если файл не требует строгой JWT защиты для самого акта скачивания.
-    // Если JWT нужен, скачивание через <a> может быть сложнее, и лучше делать через JS fetch/axios
-    // и затем программно инициировать скачивание (Blob).
-    // Пока что сделаем прямой URL, предполагая, что эндпоинт на бэкенде защищен JWT.
-    // Для реального скачивания через <a> с JWT, возможно, потребуется временный токен в URL.
     return `${apiClient.defaults.baseURL}/student-works/download/${storedFilename}?token=${localStorage.getItem('accessToken')}`;
-    // ПРИМЕЧАНИЕ: Передача токена в URL - не самый безопасный метод.
-    // Лучше инициировать скачивание через JS, где заголовки могут быть установлены.
-    // Для простоты примера оставим так, но это место для улучшения.
 };
+
+const toggleLessonPanel = (lessonId) => {
+  if (activeLessonId.value === lessonId) {
+    activeLessonId.value = null; 
+  } else {
+    activeLessonId.value = lessonId; 
+  }
+};
+
+// Функция closeLessonPanel больше не нужна, так как кнопка удалена
+// Если ESLint будет ругаться на ее неиспользование, ее можно будет удалить.
+// const closeLessonPanel = () => {
+//     activeLessonId.value = null;
+// };
 
 </script>
