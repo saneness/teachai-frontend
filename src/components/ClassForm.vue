@@ -13,13 +13,13 @@
             id="className"
             v-model="editableClass.name"
             required
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         
         <div class="mb-4">
           <label for="programName" class="block text-gray-700 text-sm font-semibold mb-2">Program:</label>
-          <div v-if="isEditing" class="p-3 bg-gray-100 rounded-md text-gray-700">
+          <div v-if="isEditing" class="p-3 bg-gray-100 rounded-md text-gray-700 border border-gray-300">
             {{ editableClass.program_name || 'Not assigned' }} 
             <span class="text-xs text-gray-500 ml-2">(Cannot be changed after creation)</span>
           </div>
@@ -27,12 +27,13 @@
             <select
               id="programName"
               v-model="editableClass.program_name"
-              class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              :disabled="availablePrograms.length === 0 && !isProgramsLoading"
+              class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+              :disabled="isProgramsLoading || availablePrograms.length === 0"
               required 
             >
               <option v-if="isProgramsLoading" :value="null" disabled>Loading programs...</option>
               <option v-else-if="availablePrograms.length === 0" :value="null" disabled>No programs available. Create one first.</option>
+              <option v-if="!isProgramsLoading && availablePrograms.length > 0 && editableClass.program_name === null" :value="null" disabled>Please select a program</option>
               <option v-for="program in availablePrograms" :key="program.id" :value="program.name">
                 {{ program.name }}
               </option>
@@ -51,7 +52,7 @@
             id="students"
             v-model="studentsText"
             rows="5"
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="John Doe&#10;Jane Smith&#10;Peter Jones" 
           ></textarea>
         </div>
@@ -68,7 +69,7 @@
           </button>
           <button
             type="submit"
-            :disabled="isLoading || (!isEditing && availablePrograms.length === 0)"
+            :disabled="isLoading || (!isEditing && (isProgramsLoading || availablePrograms.length === 0 || !editableClass.program_name))"
             class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
             <span v-if="isLoading">Saving...</span>
@@ -107,31 +108,30 @@ const studentsText = ref('');
 const formError = ref(''); 
 const isLoading = ref(false);
 const availablePrograms = ref([]);
-const isProgramsLoading = ref(false); // Флаг для загрузки программ
+const isProgramsLoading = ref(false); 
 
 const fetchAvailablePrograms = async () => {
   isProgramsLoading.value = true;
-  formError.value = ''; // Сбрасываем ошибку перед загрузкой
+  formError.value = ''; 
   try {
     const response = await apiClient.get('/programs');
     availablePrograms.value = response.data;
-    // Если создаем новый класс и программы есть, выбираем первую по умолчанию
+    
     if (!props.isEditing && availablePrograms.value.length > 0) {
-      editableClass.value.program_name = availablePrograms.value[0].name;
+      editableClass.value.program_name = null; // Устанавливаем в null, чтобы сработал плейсхолдер "Please select a program"
     } else if (!props.isEditing && availablePrograms.value.length === 0) {
-        editableClass.value.program_name = null; // Убедимся, что null, если программ нет
-        formError.value = "No programs available. Please create a program first to assign to the class.";
+        editableClass.value.program_name = null; 
     }
   } catch (error) {
     console.error("Failed to fetch programs:", error);
-    formError.value = "Could not load available programs."; 
+    formError.value = "Could not load available programs. Please try again."; 
   } finally {
     isProgramsLoading.value = false;
   }
 };
 
-onMounted(async () => { // Делаем onMounted асинхронным
-  await fetchAvailablePrograms(); // Дожидаемся загрузки программ
+onMounted(async () => { 
+  await fetchAvailablePrograms(); 
   
   if (props.isEditing && props.classToEdit) {
     editableClass.value = { ...props.classToEdit }; 
@@ -140,16 +140,11 @@ onMounted(async () => { // Делаем onMounted асинхронным
     } else {
         studentsText.value = '';
     }
-  } else { // Режим создания
-    // Если editableClass уже был инициализирован с program_name после fetchAvailablePrograms,
-    // не нужно его сбрасывать здесь, если программы есть.
-    // Если программ нет, program_name останется null.
-    if (!editableClass.value.program_name && availablePrograms.value.length > 0) {
-         editableClass.value.program_name = availablePrograms.value[0].name;
-    } else if (availablePrograms.value.length === 0) {
+  } else { 
+    // Убедимся, что при создании, если программы есть, program_name остается null для выбора
+    if (availablePrograms.value.length > 0) {
         editableClass.value.program_name = null;
     }
-    // Убедимся, что остальные поля сброшены для нового класса
     editableClass.value.id = null;
     editableClass.value.name = '';
     editableClass.value.students = [];
@@ -163,37 +158,35 @@ const closeModal = () => {
 };
 
 const submitForm = async () => {
-  formError.value = ''; // Сбрасываем ошибку перед отправкой
+  formError.value = ''; 
   if (!editableClass.value.name.trim()) {
     formError.value = 'Class name is required.'; 
     return;
   }
-  // Проверка на выбор программы, если это не режим редактирования
-  if (!props.isEditing && !editableClass.value.program_name) {
+  // При создании класса программа должна быть выбрана
+  if (!props.isEditing && !editableClass.value.program_name) { 
       formError.value = 'Program selection is required.';
       return;
   }
-   if (!props.isEditing && availablePrograms.value.length === 0) {
-      formError.value = 'Cannot create class: No programs available. Please create a program first.';
+   // Дополнительная проверка, если создаем класс, а программы не загрузились/отсутствуют
+   if (!props.isEditing && (isProgramsLoading.value || availablePrograms.value.length === 0)) { 
+      formError.value = 'Cannot create class: Programs are not available or still loading. Please try again or create a program first.';
       return;
   }
-
 
   isLoading.value = true;
 
   const studentNames = studentsText.value.split('\n').map(name => name.trim()).filter(name => name);
 
-  const payload = {
+  let payload = {
     name: editableClass.value.name,
-    program_name: editableClass.value.program_name, 
     students: studentNames, 
   };
-  // При редактировании program_name не отправляется или игнорируется бэкендом
-  if (props.isEditing) {
-      delete payload.program_name; // Не отправляем программу при редактировании класса
+  
+  if (!props.isEditing) {
+    payload.program_name = editableClass.value.program_name;
   }
-
-
+  
   try {
     if (props.isEditing) {
       await apiClient.put(`/classes/${editableClass.value.id}`, payload);
