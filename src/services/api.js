@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from '../router'; 
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api', 
+  baseURL: '/api', // Используем относительный путь
   headers: {
     'Content-Type': 'application/json',
   },
