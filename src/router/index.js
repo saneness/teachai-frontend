@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
-import DashboardView from '../views/DashboardView.vue'; // Это страница Классов
+import DashboardView from '../views/DashboardView.vue'; 
 import ClassDetailView from '../views/ClassDetailView.vue';
-import ProgramsView from '../views/ProgramsView.vue'; // НОВАЯ СТРАНИЦА для списка программ
-import ProgramDetailView from '../views/ProgramDetailView.vue'; // НОВАЯ СТРАНИЦА для деталей программы
+import ProgramsView from '../views/ProgramsView.vue'; 
+import ProgramDetailView from '../views/ProgramDetailView.vue'; 
+import StudentProgressView from '../views/StudentProgressView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 
 const routes = [
@@ -50,6 +51,13 @@ const routes = [
     name: 'ProgramDetail',
     component: ProgramDetailView, // Пока будет заглушкой
     props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/class/:classId/student/:studentId', // classId здесь для контекста, но не обязателен для props
+    name: 'StudentProgress',
+    component: StudentProgressView,
+    props: route => ({ studentId: parseInt(route.params.studentId, 10), classId: parseInt(route.params.classId, 10) }), // Передаем studentId и classId как props
     meta: { requiresAuth: true }
   },
   {

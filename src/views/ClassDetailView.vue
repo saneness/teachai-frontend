@@ -26,9 +26,14 @@
               <li
                 v-for="student in classData.students"
                 :key="student.id"
-                class="p-3 bg-white rounded shadow-sm border border-gray-200"
+                class="p-3 bg-white rounded shadow-sm border border-gray-200 hover:bg-gray-50"
               >
-                {{ student.name }}
+                <router-link 
+                  :to="{ name: 'StudentProgress', params: { classId: classData.id, studentId: student.id }}"
+                  class="font-medium text-blue-600 hover:text-blue-800"
+                >
+                  {{ student.name }}
+                </router-link>
               </li>
             </ul>
           </div>
@@ -37,7 +42,6 @@
 
         <div>
           <h2 class="text-2xl font-semibold text-gray-700 mb-4">Current Program Menu</h2> 
-          <!-- Передаем уроки из program_details, если они есть -->
           <ProgramMenu :lessons="classData.program_details ? classData.program_details.lessons : []" />
         </div>
       </div>
@@ -60,7 +64,7 @@ import apiClient from '../services/api';
 import ProgramMenu from '../components/ProgramMenu.vue'; 
 
 const props = defineProps({
-  id: { 
+  id: { // ИСПРАВЛЕНО: ожидаем проп 'id', так как параметр маршрута :id
     type: [String, Number],
     required: true,
   },
@@ -70,14 +74,16 @@ const classData = ref(null);
 const isLoading = ref(true);
 const error = ref(null);
 
-// programItems больше не нужен здесь, так как уроки приходят с classData.program_details
-
 const fetchClassDetails = async () => {
   isLoading.value = true;
   error.value = null;
+  if (props.id === undefined || props.id === null) { // Дополнительная проверка
+      error.value = "Class ID is missing.";
+      isLoading.value = false;
+      return;
+  }
   try {
-    // Бэкенд теперь должен возвращать program_details с уроками, если программа назначена
-    const response = await apiClient.get(`/classes/${props.id}`);
+    const response = await apiClient.get(`/classes/${props.id}`); // Используем props.id
     classData.value = response.data;
   } catch (err) {
     console.error(`Failed to fetch class details for id ${props.id}:`, err);
@@ -92,6 +98,5 @@ const fetchClassDetails = async () => {
     isLoading.value = false;
   }
 };
-
 onMounted(fetchClassDetails);
 </script>
