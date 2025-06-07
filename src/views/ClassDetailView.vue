@@ -1,7 +1,7 @@
 <template>
   <div class="class-detail p-4 md:p-6 lg:p-8">
     <div v-if="isLoading" class="text-center py-10">
-      <p class="text-gray-500 text-lg">Loading class data...</p> 
+      <p class="text-gray-500 text-lg">Loading class data...</p>
     </div>
     <div v-else-if="error" class="text-center py-10">
       <p class="text-red-500 text-lg">Error: {{ error }}</p> 
@@ -21,7 +21,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 class="text-2xl font-semibold text-gray-700 mb-4">Student List ({{ classData.students.length }})</h2> 
-          <div v-if="classData.students && classData.students.length > 0" class="bg-gray-50 p-4 rounded-md max-h-96 overflow-y-auto">
+          <!-- ИЗМЕНЕНИЕ: Удалены классы max-h-96 и overflow-y-auto -->
+          <div v-if="classData.students && classData.students.length > 0" class="bg-gray-50 p-4 rounded-md">
             <ul class="space-y-2">
               <li
                 v-for="student in classData.students"
@@ -64,7 +65,7 @@ import apiClient from '../services/api';
 import ProgramMenu from '../components/ProgramMenu.vue'; 
 
 const props = defineProps({
-  id: { // ИСПРАВЛЕНО: ожидаем проп 'id', так как параметр маршрута :id
+  id: { // Ожидаем проп 'id' из маршрута
     type: [String, Number],
     required: true,
   },
@@ -77,13 +78,13 @@ const error = ref(null);
 const fetchClassDetails = async () => {
   isLoading.value = true;
   error.value = null;
-  if (props.id === undefined || props.id === null) { // Дополнительная проверка
+  if (!props.id) {
       error.value = "Class ID is missing.";
       isLoading.value = false;
       return;
   }
   try {
-    const response = await apiClient.get(`/classes/${props.id}`); // Используем props.id
+    const response = await apiClient.get(`/classes/${props.id}`);
     classData.value = response.data;
   } catch (err) {
     console.error(`Failed to fetch class details for id ${props.id}:`, err);

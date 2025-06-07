@@ -26,7 +26,7 @@
             :key="lesson.id" 
             class="border rounded-md shadow-sm bg-gray-50 overflow-hidden"
         >
-          <!-- Заголовок урока (кликабельный для раскрытия) -->
+          <!-- Заголовок урока -->
           <div 
             @click="toggleLessonPanel(lesson.id)"
             class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
@@ -35,7 +35,6 @@
               <h3 class="text-xl font-semibold text-gray-800">{{ lesson.topic }}</h3>
               <p class="text-xs text-gray-400 mt-0.5">Order: {{ lesson.order === null ? 'N/A' : lesson.order }}</p>
             </div>
-            <!-- Иконка стрелки -->
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 transition-transform duration-300" 
                  :class="{'rotate-180': activeLessonId === lesson.id}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -44,9 +43,8 @@
           
           <!-- Раскрываемое содержимое урока -->
           <div v-if="activeLessonId === lesson.id" class="p-4 border-t bg-white">
-            <!-- Удалена кнопка "свернуть" отсюда -->
-
-            <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm">{{ lesson.description }}</p> <!-- Убран mt-1, т.к. кнопка свернуть удалена -->
+            <!-- ИЗМЕНЕНИЕ: Добавлен класс whitespace-pre-wrap -->
+            <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm whitespace-pre-wrap">{{ lesson.description }}</p>
             <p v-else class="text-gray-500 italic mb-4 text-sm">No description for this lesson.</p>
             
             <!-- Комментарий учителя -->
@@ -154,35 +152,16 @@
 </template>
 
 <script setup>
+// ... (остальной скрипт без изменений)
 import { ref, onMounted, reactive, computed } from 'vue';
 import apiClient from '../services/api';
-
-const props = defineProps({
-  studentId: { type: Number, required: true, },
-  classId: { type: Number, required: true, }
-});
-
-const studentProgressData = ref(null);
-const isLoading = ref(true);
-const error = ref(null);
-
-const lessonComments = reactive({}); 
-const isSavingComment = reactive({}); 
-const commentErrors = reactive({}); 
-const commentSuccess = reactive({}); 
-
-const selectedFiles = reactive({});
-const fileDescriptions = reactive({});
-const isUploadingWork = reactive({});
-const uploadErrors = reactive({});   
-
-const showDeleteWorkConfirmModal = ref(false);
-const workToDelete = ref(null);
-
+const props = defineProps({ studentId: { type: Number, required: true, }, classId: { type: Number, required: true, } });
+const studentProgressData = ref(null); const isLoading = ref(true); const error = ref(null);
+const lessonComments = reactive({}); const isSavingComment = reactive({}); const commentErrors = reactive({}); const commentSuccess = reactive({});
+const selectedFiles = reactive({}); const fileDescriptions = reactive({}); const isUploadingWork = reactive({}); const uploadErrors = reactive({});   
+const showDeleteWorkConfirmModal = ref(false); const workToDelete = ref(null);
 const classIdFromRoute = computed(() => props.classId); 
-
 const activeLessonId = ref(null);
-
 const sortedProgramLessons = computed(() => {
   if (studentProgressData.value?.program?.lessons) {
     return [...studentProgressData.value.program.lessons].sort((a, b) => {
@@ -192,7 +171,6 @@ const sortedProgramLessons = computed(() => {
   }
   return [];
 });
-
 const fetchStudentProgress = async () => {
   isLoading.value = true; error.value = null;
   try {
@@ -200,14 +178,9 @@ const fetchStudentProgress = async () => {
     studentProgressData.value = response.data;
     if (studentProgressData.value.program?.lessons) {
       studentProgressData.value.program.lessons.forEach(lesson => {
-        lessonComments[lesson.id] = lesson.student_comment || '';
-        isSavingComment[lesson.id] = false;
-        commentErrors[lesson.id] = '';
-        commentSuccess[lesson.id] = false;
-        selectedFiles[lesson.id] = null;
-        fileDescriptions[lesson.id] = '';
-        isUploadingWork[lesson.id] = false;
-        uploadErrors[lesson.id] = '';
+        lessonComments[lesson.id] = lesson.student_comment || ''; isSavingComment[lesson.id] = false;
+        commentErrors[lesson.id] = ''; commentSuccess[lesson.id] = false; selectedFiles[lesson.id] = null;
+        fileDescriptions[lesson.id] = ''; isUploadingWork[lesson.id] = false; uploadErrors[lesson.id] = '';
       });
     }
   } catch (err) {
@@ -217,17 +190,14 @@ const fetchStudentProgress = async () => {
     else { error.value = err.message || 'Failed to load student progress data'; }
   } finally { isLoading.value = false; }
 };
-
 onMounted(fetchStudentProgress);
-
 const saveComment = async (lessonId) => {
   isSavingComment[lessonId] = true; commentErrors[lessonId] = ''; commentSuccess[lessonId] = false;
   try {
     await apiClient.post('/student-lesson-progress', {
       student_id: props.studentId, lesson_id: lessonId, comment: lessonComments[lessonId]
     });
-    commentSuccess[lessonId] = true;
-    setTimeout(() => commentSuccess[lessonId] = false, 3000); 
+    commentSuccess[lessonId] = true; setTimeout(() => commentSuccess[lessonId] = false, 3000); 
   } catch (err) {
     console.error(`Failed to save comment for lesson ${lessonId}:`, err);
     if (err.response?.data?.msg) { commentErrors[lessonId] = err.response.data.msg; } 
@@ -235,85 +205,47 @@ const saveComment = async (lessonId) => {
     else { commentErrors[lessonId] = 'Failed to save comment.'; }
   } finally { isSavingComment[lessonId] = false; }
 };
-
 const handleFileUpload = (event, lessonId) => {
   const file = event.target.files[0];
-  if (file) {
-    selectedFiles[lessonId] = file;
-    uploadErrors[lessonId] = ''; 
-  }
+  if (file) { selectedFiles[lessonId] = file; uploadErrors[lessonId] = ''; }
 };
-
 const uploadWork = async (lessonId) => {
-  if (!selectedFiles[lessonId]) {
-    uploadErrors[lessonId] = "Please select a file to upload.";
-    return;
-  }
-  isUploadingWork[lessonId] = true;
-  uploadErrors[lessonId] = '';
-
+  if (!selectedFiles[lessonId]) { uploadErrors[lessonId] = "Please select a file to upload."; return; }
+  isUploadingWork[lessonId] = true; uploadErrors[lessonId] = '';
   const formData = new FormData();
   formData.append('file', selectedFiles[lessonId]);
-  if(fileDescriptions[lessonId] && fileDescriptions[lessonId].trim() !== '') {
-    formData.append('description', fileDescriptions[lessonId].trim());
-  }
-
+  if(fileDescriptions[lessonId] && fileDescriptions[lessonId].trim() !== '') { formData.append('description', fileDescriptions[lessonId].trim()); }
   try {
     await apiClient.post(`/lessons/${lessonId}/students/${props.studentId}/upload_work`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     document.getElementById(`file-upload-${lessonId}`).value = null; 
-    selectedFiles[lessonId] = null;
-    fileDescriptions[lessonId] = '';
+    selectedFiles[lessonId] = null; fileDescriptions[lessonId] = '';
     fetchStudentProgress(); 
   } catch (err) {
     console.error(`Failed to upload work for lesson ${lessonId}:`, err);
     if (err.response?.data?.msg) { uploadErrors[lessonId] = err.response.data.msg; }
     else if (err.request) { uploadErrors[lessonId] = 'Network Error. Could not upload file.'; }
     else { uploadErrors[lessonId] = 'Failed to upload file.'; }
-  } finally {
-    isUploadingWork[lessonId] = false;
-  }
+  } finally { isUploadingWork[lessonId] = false; }
 };
-
-const confirmDeleteWork = (work) => {
-    workToDelete.value = work;
-    showDeleteWorkConfirmModal.value = true;
-};
-
+const confirmDeleteWork = (work) => { workToDelete.value = work; showDeleteWorkConfirmModal.value = true; };
 const deleteWork = async () => {
     if (!workToDelete.value) return;
-    try {
-        await apiClient.delete(`/student-works/${workToDelete.value.id}`);
-        fetchStudentProgress(); 
-    } catch (err) {
+    try { await apiClient.delete(`/student-works/${workToDelete.value.id}`); fetchStudentProgress(); } 
+    catch (err) {
         console.error('Failed to delete work:', err);
         const lessonId = workToDelete.value.lesson_id; 
         if (err.response?.data?.msg) { uploadErrors[lessonId] = err.response.data.msg; }
         else if (err.request) { uploadErrors[lessonId] = 'Network Error.'; }
         else { uploadErrors[lessonId] = 'Failed to delete work.'; }
-    } finally {
-        showDeleteWorkConfirmModal.value = false;
-        workToDelete.value = null;
-    }
+    } finally { showDeleteWorkConfirmModal.value = false; workToDelete.value = null; }
 };
-
 const getWorkDownloadUrl = (storedFilename) => {
     return `${apiClient.defaults.baseURL}/student-works/download/${storedFilename}?token=${localStorage.getItem('accessToken')}`;
 };
-
 const toggleLessonPanel = (lessonId) => {
-  if (activeLessonId.value === lessonId) {
-    activeLessonId.value = null; 
-  } else {
-    activeLessonId.value = lessonId; 
-  }
+  if (activeLessonId.value === lessonId) { activeLessonId.value = null; } 
+  else { activeLessonId.value = lessonId; }
 };
-
-// Функция closeLessonPanel больше не нужна, так как кнопка удалена
-// Если ESLint будет ругаться на ее неиспользование, ее можно будет удалить.
-// const closeLessonPanel = () => {
-//     activeLessonId.value = null;
-// };
-
 </script>
