@@ -8,57 +8,22 @@
       <form @submit.prevent="submitForm">
         <div class="mb-4">
           <label for="lessonTopic" class="block text-gray-700 text-sm font-semibold mb-2">Lesson Topic:</label>
-          <input
-            type="text"
-            id="lessonTopic"
-            v-model="editableLesson.topic"
-            required
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <input type="text" id="lessonTopic" v-model="editableLesson.topic" required class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"/>
         </div>
         <div class="mb-6">
           <label for="lessonDescription" class="block text-gray-700 text-sm font-semibold mb-2">Description (optional):</label>
-          <textarea
-            id="lessonDescription"
-            v-model="editableLesson.description"
-            rows="4"
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-          ></textarea>
+          <textarea id="lessonDescription" v-model="editableLesson.description" rows="4" class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
-         <div class="mb-4">
-          <label for="lessonOrder" class="block text-gray-700 text-sm font-semibold mb-2">Order (optional, for sorting):</label>
-          <input
-            type="number"
-            id="lessonOrder"
-            v-model.number="editableLesson.order"
-            min="0"
-            class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div v-if="errorMessage" class="mb-4 text-red-500 text-sm">
-          {{ errorMessage }}
-        </div>
+        <div v-if="errorMessage" class="mb-4 text-red-500 text-sm">{{ errorMessage }}</div>
         <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="closeForm"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            :disabled="isLoading"
-            class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            <span v-if="isLoading">Saving...</span>
-            <span v-else>{{ isEditing ? 'Save Changes' : 'Add Lesson' }}</span>
+          <button type="button" @click="handleBackdropClick" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
+          <button type="submit" :disabled="isLoading" class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50">
+            <span v-if="isLoading">Saving...</span><span v-else>{{ isEditing ? 'Save Changes' : 'Add Lesson' }}</span>
           </button>
         </div>
       </form>
     </div>
     
-    <!-- Confirmation Modal for Discarding Changes -->
     <div v-if="showDiscardConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h3 class="text-xl font-semibold text-yellow-600 mb-4">Unsaved Changes</h3>
@@ -69,46 +34,36 @@
             </div>
         </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import apiClient from '../services/api';
 
 const props = defineProps({
-  programId: {
-    type: Number,
-    required: true,
-  },
-  lessonToEdit: {
-    type: Object,
-    default: null,
-  },
-  isEditing: {
-    type: Boolean,
-    default: false,
-  },
+  programId: { type: Number, required: true },
+  lessonToEdit: { type: Object, default: null },
+  isEditing: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'lesson-saved']);
 
-const editableLesson = ref({
-  id: null,
-  topic: '',
-  description: '',
-  order: null,
-});
+const editableLesson = ref({ id: null, topic: '', description: '', order: null });
 const errorMessage = ref('');
 const isLoading = ref(false);
 
-const isDirty = ref(false);
+const initialFormState = ref('');
 const showDiscardConfirmModal = ref(false);
 
-watch(editableLesson, () => {
-    isDirty.value = true;
-}, { deep: true });
+const isFormDirty = computed(() => {
+    if (initialFormState.value === '') return false;
+    return initialFormState.value !== JSON.stringify(editableLesson.value);
+});
+
+const captureInitialState = () => {
+    initialFormState.value = JSON.stringify(editableLesson.value);
+};
 
 onMounted(() => {
   if (props.isEditing && props.lessonToEdit) {
@@ -116,65 +71,41 @@ onMounted(() => {
   } else {
     editableLesson.value = { id: null, topic: '', description: '', order: null };
   }
-  // Reset dirty flag after form is populated
-  isDirty.value = false; 
+  captureInitialState();
 });
 
-const closeForm = () => {
-  emit('close');
-};
+const closeForm = () => { emit('close'); };
 
 const handleBackdropClick = () => {
-  if (isDirty.value) {
-    showDiscardConfirmModal.value = true;
-  } else {
-    closeForm();
-  }
+  if (isFormDirty.value) { showDiscardConfirmModal.value = true; } 
+  else { closeForm(); }
 };
 
-const confirmDiscard = () => {
-  showDiscardConfirmModal.value = false;
-  closeForm();
-};
-
-const cancelDiscard = () => {
-  showDiscardConfirmModal.value = false;
-};
+const confirmDiscard = () => { showDiscardConfirmModal.value = false; closeForm(); };
+const cancelDiscard = () => { showDiscardConfirmModal.value = false; };
 
 const submitForm = async () => {
-  if (!editableLesson.value.topic.trim()) {
-    errorMessage.value = 'Lesson topic is required.';
-    return;
-  }
-  isLoading.value = true;
-  errorMessage.value = '';
-
+  if (!editableLesson.value.topic.trim()) { errorMessage.value = 'Lesson topic is required.'; return; }
+  isLoading.value = true; errorMessage.value = '';
   const payload = {
     topic: editableLesson.value.topic,
     description: editableLesson.value.description,
-    order: editableLesson.value.order === null || editableLesson.value.order === '' ? null : parseInt(editableLesson.value.order, 10),
+    order: editableLesson.value.order
   };
-
   try {
     if (props.isEditing) {
       await apiClient.put(`/lessons/${editableLesson.value.id}`, payload);
     } else {
       await apiClient.post(`/programs/${props.programId}/lessons`, payload);
     }
-    isDirty.value = false; // Reset dirty flag after successful save
+    captureInitialState();
     emit('lesson-saved');
     closeForm();
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.msg) {
-      errorMessage.value = error.response.data.msg;
-    } else if (error.request) {
-      errorMessage.value = 'Network Error: Could not connect to the server.';
-    } else {
-      errorMessage.value = `Error ${props.isEditing ? 'updating' : 'adding'} lesson.`;
-    }
+    if (error.response?.data?.msg) { errorMessage.value = error.response.data.msg; } 
+    else if (error.request) { errorMessage.value = 'Network Error.'; } 
+    else { errorMessage.value = `Error ${props.isEditing ? 'updating' : 'adding'} lesson.`; }
     console.error('Lesson form error:', error);
-  } finally {
-    isLoading.value = false;
-  }
+  } finally { isLoading.value = false; }
 };
 </script>

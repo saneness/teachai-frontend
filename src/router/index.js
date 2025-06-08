@@ -1,70 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
-import DashboardView from '../views/DashboardView.vue'; 
+import DashboardView from '../views/DashboardView.vue'; // Главная страница
 import ClassDetailView from '../views/ClassDetailView.vue';
-import ProgramsView from '../views/ProgramsView.vue'; 
 import ProgramDetailView from '../views/ProgramDetailView.vue'; 
 import StudentProgressView from '../views/StudentProgressView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 
 const routes = [
-  {
-    path: '/login',
-    name: 'Login',
-    component: LoginView,
-    meta: { requiresGuest: true } 
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: RegisterView,
-    meta: { requiresGuest: true }
-  },
-  {
-    path: '/', // Главная страница теперь будет списком классов
-    name: 'Dashboard', // Оставим Dashboard для классов для обратной совместимости
-    component: DashboardView,
-    meta: { requiresAuth: true } 
-  },
-  {
-    path: '/classes', // Явный путь для классов, если нужен
-    name: 'Classes',
-    component: DashboardView, // Используем тот же компонент
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/class/:id',
-    name: 'ClassDetail',
-    component: ClassDetailView,
-    props: true, 
-    meta: { requiresAuth: true }
-  },
-  { // НОВЫЕ МАРШРУТЫ ДЛЯ ПРОГРАММ
-    path: '/programs',
-    name: 'Programs',
-    component: ProgramsView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/program/:id',
-    name: 'ProgramDetail',
-    component: ProgramDetailView, // Пока будет заглушкой
-    props: true,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/class/:classId/student/:studentId', // classId здесь для контекста, но не обязателен для props
-    name: 'StudentProgress',
-    component: StudentProgressView,
-    props: route => ({ studentId: parseInt(route.params.studentId, 10), classId: parseInt(route.params.classId, 10) }), // Передаем studentId и classId как props
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/:pathMatch(.*)*', 
-    name: 'NotFound',
-    component: NotFoundView,
-  }
+  { path: '/login', name: 'Login', component: LoginView, meta: { requiresGuest: true } },
+  { path: '/register', name: 'Register', component: RegisterView, meta: { requiresGuest: true }},
+  
+  // Главный маршрут, который теперь ведет на объединенную панель управления
+  { path: '/', name: 'Dashboard', component: DashboardView, meta: { requiresAuth: true } },
+  
+  // Маршруты для деталей остаются
+  { path: '/class/:id', name: 'ClassDetail', component: ClassDetailView, props: true, meta: { requiresAuth: true } },
+  { path: '/program/:id', name: 'ProgramDetail', component: ProgramDetailView, props: true, meta: { requiresAuth: true } },
+  { path: '/class/:classId/student/:studentId', name: 'StudentProgress', component: StudentProgressView, props: true, meta: { requiresAuth: true } },
+  
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView, }
 ];
 
 const router = createRouter({
@@ -74,12 +29,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('accessToken');
-
   if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
     next({ name: 'Login' });
   } else if (to.matched.some(record => record.meta.requiresGuest) && isAuthenticated) {
-    // Если пользователь аутентифицирован и пытается зайти на гостевую страницу,
-    // перенаправляем его на главную (список классов)
     next({ name: 'Dashboard' }); 
   } else {
     next();

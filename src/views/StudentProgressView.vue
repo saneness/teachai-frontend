@@ -6,11 +6,17 @@
     <div v-else-if="error" class="text-center py-10">
       <p class="text-red-500 text-lg">Error: {{ error }}</p>
       <router-link :to="{ name: 'ClassDetail', params: { id: classIdFromRoute }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-        Back to Class Details
+        Back
       </router-link>
     </div>
     <div v-else-if="studentProgressData" class="bg-white p-6 rounded-lg shadow-xl">
-      <!-- Информация о студенте и классе -->
+      <div class="mb-4">
+        <router-link :to="{ name: 'ClassDetail', params: { id: classIdFromRoute }}" class="text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out inline-flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+            <span>Back</span>
+        </router-link>
+      </div>
+
       <div class="mb-6 pb-4 border-b border-gray-200">
         <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-1">{{ studentProgressData.name }}</h1>
         <p class="text-gray-600 text-md">Class: {{ studentProgressData.class_name }}</p>
@@ -26,7 +32,7 @@
             :key="lesson.id" 
             class="border rounded-md shadow-sm bg-gray-50 overflow-hidden"
         >
-          <!-- Заголовок урока -->
+          <!-- Lesson Accordion Header -->
           <div 
             @click="toggleLessonPanel(lesson.id)"
             class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
@@ -41,13 +47,12 @@
             </svg>
           </div>
           
-          <!-- Раскрываемое содержимое урока -->
+          <!-- Lesson Accordion Content -->
           <div v-if="activeLessonId === lesson.id" class="p-4 border-t bg-white">
-            <!-- ИЗМЕНЕНИЕ: Добавлен класс whitespace-pre-wrap -->
             <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm whitespace-pre-wrap">{{ lesson.description }}</p>
             <p v-else class="text-gray-500 italic mb-4 text-sm">No description for this lesson.</p>
             
-            <!-- Комментарий учителя -->
+            <!-- Teacher's Comment Section -->
             <div class="mb-4">
               <label :for="'comment-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Teacher's Comment:</label>
               <textarea
@@ -69,7 +74,7 @@
               <p v-if="commentSuccess[lesson.id]" class="text-xs text-green-500 mt-1">Comment saved!</p>
             </div>
 
-            <!-- Загруженные работы студента -->
+            <!-- Student's Work Section -->
             <div class="border-t pt-4 mt-4">
               <h4 class="text-md font-semibold text-gray-700 mb-2">Student's Work:</h4>
               <div v-if="lesson.student_works && lesson.student_works.length > 0" class="space-y-2">
@@ -96,7 +101,7 @@
               </div>
               <p v-else class="text-sm text-gray-500 italic">No work uploaded for this lesson.</p>
 
-              <!-- Форма загрузки файла -->
+              <!-- Upload Form -->
               <div class="mt-3">
                 <label :for="'file-upload-' + lesson.id" class="block text-sm font-medium text-gray-700 mb-1">Upload New Work:</label>
                 <input 
@@ -130,14 +135,15 @@
       </p>
       
       <div class="mt-8 pt-6 border-t border-gray-200">
-        <router-link :to="{ name: 'ClassDetail', params: { id: classIdFromRoute }}" class="text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out">
-          &larr; Back to Class Details
+        <router-link :to="{ name: 'ClassDetail', params: { id: classIdFromRoute }}" class="text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out inline-flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+            <span>Back</span>
         </router-link>
       </div>
     </div>
 
-     <!-- Модальное окно подтверждения удаления работы -->
-    <div v-if="showDeleteWorkConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
+     <!-- Delete Work Confirmation Modal -->
+    <div v-if="showDeleteWorkConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h3 class="text-xl font-semibold mb-4">Confirm Work Deletion</h3>
             <p class="mb-6">Are you sure you want to delete the file "{{ workToDelete?.original_filename }}"?</p>
@@ -147,14 +153,14 @@
             </div>
         </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-// ... (остальной скрипт без изменений)
+// ... (script remains unchanged)
 import { ref, onMounted, reactive, computed } from 'vue';
 import apiClient from '../services/api';
+
 const props = defineProps({ studentId: { type: Number, required: true, }, classId: { type: Number, required: true, } });
 const studentProgressData = ref(null); const isLoading = ref(true); const error = ref(null);
 const lessonComments = reactive({}); const isSavingComment = reactive({}); const commentErrors = reactive({}); const commentSuccess = reactive({});

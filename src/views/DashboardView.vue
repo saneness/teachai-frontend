@@ -1,35 +1,81 @@
 <template>
-  <div class="dashboard">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-bold text-gray-800">My Classes</h1> <!-- Translated -->
-      <button
-        @click="openCreateClassModal"
-        class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out"
-      >
-        Create Class <!-- Translated -->
-      </button>
+  <div class="dashboard-view">
+    <!-- Секция Классов -->
+    <div class="mb-12">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800">My Classes</h1>
+      </div>
+
+      <div v-if="isClassesLoading" class="text-center py-10">
+        <p class="text-gray-500 text-lg">Loading classes...</p>
+      </div>
+      <div v-else-if="classesError" class="text-center py-10">
+        <p class="text-red-500 text-lg">Error loading classes: {{ classesError }}</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Список существующих классов -->
+        <ClassCard
+          v-for="classItem in classes"
+          :key="classItem.id"
+          :class-item="classItem"
+          @view-details="viewClassDetails"
+          @edit-class="openEditClassModal"
+          @delete-class="confirmDeleteClass"
+        />
+        <!-- Карточка для добавления нового класса -->
+        <div
+          @click="openCreateClassModal"
+          class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-gray-50 cursor-pointer text-gray-500 hover:text-blue-600 transition-all duration-300 min-h-[160px]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="mt-2 font-semibold">Add New Class</span>
+        </div>
+      </div>
     </div>
 
-    <div v-if="isLoading" class="text-center py-10">
-      <p class="text-gray-500 text-lg">Loading classes...</p> <!-- Translated -->
-    </div>
-    <div v-else-if="error" class="text-center py-10">
-      <p class="text-red-500 text-lg">Error loading classes: {{ error }}</p> <!-- Translated -->
-    </div>
-    <div v-else-if="classes.length === 0" class="text-center py-10">
-      <p class="text-gray-500 text-lg">You don't have any classes yet. Create a new one!</p> <!-- Translated -->
-    </div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <ClassCard
-        v-for="classItem in classes"
-        :key="classItem.id"
-        :class-item="classItem"
-        @view-details="viewClassDetails"
-        @edit-class="openEditClassModal"
-        @delete-class="confirmDeleteClass"
-      />
+    <!-- Разделитель -->
+    <hr class="my-16 border-t-2 border-gray-200">
+
+    <!-- Секция Программ -->
+    <div>
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800">My Programs</h1>
+      </div>
+
+       <div v-if="isProgramsLoading" class="text-center py-10">
+        <p class="text-gray-500 text-lg">Loading programs...</p>
+      </div>
+      <div v-else-if="programsError" class="text-center py-10">
+        <p class="text-red-500 text-lg">Error loading programs: {{ programsError }}</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Список существующих программ -->
+        <ProgramCard
+          v-for="programItem in programs"
+          :key="programItem.id"
+          :program="programItem"
+          @view-details="viewProgramDetails"
+          @edit-program="openEditProgramModal"
+          @delete-program="confirmDeleteProgram"
+        />
+        <!-- Карточка для добавления новой программы -->
+         <div
+          @click="openCreateProgramModal"
+          class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-gray-50 cursor-pointer text-gray-500 hover:text-green-600 transition-all duration-300 min-h-[160px]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="mt-2 font-semibold">Add New Program</span>
+        </div>
+      </div>
     </div>
 
+
+    <!-- Модальные окна для Классов -->
     <ClassForm
       v-if="showClassModal"
       :is-editing="isEditingClass"
@@ -37,14 +83,32 @@
       @close="closeClassModal"
       @class-saved="handleClassSaved"
     />
-
-    <div v-if="showDeleteConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
+    <div v-if="showDeleteConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h3 class="text-xl font-semibold mb-4">Confirm Deletion</h3> <!-- Translated -->
-            <p class="mb-6">Are you sure you want to delete the class "{{ classToDelete?.name }}"? This action cannot be undone.</p> <!-- Translated -->
+            <h3 class="text-xl font-semibold mb-4">Confirm Deletion</h3>
+            <p class="mb-6">Are you sure you want to delete the class "{{ classToDelete?.name }}"? This action cannot be undone.</p>
             <div class="flex justify-end space-x-3">
-                <button @click="showDeleteConfirmModal = false" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button> <!-- Translated -->
-                <button @click="deleteClass" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">Delete</button> <!-- Translated -->
+                <button @click="showDeleteConfirmModal = false" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                <button @click="deleteClass" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна для Программ -->
+    <ProgramForm
+      v-if="showProgramModal"
+      :is-editing="isEditingProgram"
+      :program-to-edit="programToEdit"
+      @close="closeProgramModal"
+      @program-saved="handleProgramSaved"
+    />
+    <div v-if="showProgramDeleteConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Confirm Deletion</h3>
+            <p class="mb-6">Are you sure you want to delete the program "{{ programToDelete?.name }}"? This action cannot be undone and will delete all associated lessons.</p>
+            <div class="flex justify-end space-x-3">
+                <button @click="showProgramDeleteConfirmModal = false" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                <button @click="deleteProgram" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">Delete</button>
             </div>
         </div>
     </div>
@@ -53,97 +117,147 @@
 </template>
 
 <script setup>
+// ... (скрипт остается таким же, как в предыдущей версии, вся логика уже на месте)
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '../services/api';
+
 import ClassCard from '../components/ClassCard.vue';
 import ClassForm from '../components/ClassForm.vue';
+import ProgramCard from '../components/ProgramCard.vue';
+import ProgramForm from '../components/ProgramForm.vue';
 
-const classes = ref([]);
-const isLoading = ref(true);
-const error = ref(null);
 const router = useRouter();
 
+// === State for Classes ===
+const classes = ref([]);
+const isClassesLoading = ref(true);
+const classesError = ref(null);
 const showClassModal = ref(false);
 const isEditingClass = ref(false);
 const classToEdit = ref(null);
-
 const showDeleteConfirmModal = ref(false);
 const classToDelete = ref(null);
 
+// === State for Programs ===
+const programs = ref([]);
+const isProgramsLoading = ref(true);
+const programsError = ref(null);
+const showProgramModal = ref(false);
+const isEditingProgram = ref(false);
+const programToEdit = ref(null);
+const showProgramDeleteConfirmModal = ref(false);
+const programToDelete = ref(null);
 
+// === Data Fetching ===
 const fetchClasses = async () => {
-  isLoading.value = true;
-  error.value = null;
+  isClassesLoading.value = true;
+  classesError.value = null;
   try {
     const response = await apiClient.get('/classes');
     classes.value = response.data;
   } catch (err) {
     console.error('Failed to fetch classes:', err);
-    error.value = err.response?.data?.msg || err.message || 'Failed to load classes'; // Translated
+    classesError.value = err.response?.data?.msg || 'Failed to load classes';
   } finally {
-    isLoading.value = false;
+    isClassesLoading.value = false;
   }
 };
 
-onMounted(fetchClasses);
+const fetchPrograms = async () => {
+  isProgramsLoading.value = true;
+  programsError.value = null;
+  try {
+    const response = await apiClient.get('/programs');
+    programs.value = response.data;
+  } catch (err) {
+    console.error('Failed to fetch programs:', err);
+    programsError.value = err.response?.data?.msg || 'Failed to load programs';
+  } finally {
+    isProgramsLoading.value = false;
+  }
+};
 
+onMounted(() => {
+    Promise.all([fetchClasses(), fetchPrograms()]);
+});
+
+// === Methods for Classes ===
 const viewClassDetails = (classId) => {
   router.push({ name: 'ClassDetail', params: { id: classId } });
 };
-
 const openCreateClassModal = () => {
   isEditingClass.value = false;
   classToEdit.value = null; 
   showClassModal.value = true;
 };
-
 const openEditClassModal = async (classItem) => {
-  isLoading.value = true;
-  try {
-    const response = await apiClient.get(`/classes/${classItem.id}`);
-    classToEdit.value = response.data; 
-    isEditingClass.value = true;
-    showClassModal.value = true;
-  } catch (err) {
-    console.error('Failed to fetch class details for editing:', err);
-    error.value = 'Failed to load class data for editing.'; // Translated
-  } finally {
-    isLoading.value = false;
-  }
+  classToEdit.value = { ...classItem };
+  isEditingClass.value = true;
+  showClassModal.value = true;
 };
-
 const closeClassModal = () => {
   showClassModal.value = false;
   classToEdit.value = null;
 };
-
 const handleClassSaved = () => {
   fetchClasses(); 
 };
-
-const confirmDeleteClass = (classItemOrId) => {
-    if (typeof classItemOrId === 'object' && classItemOrId !== null) {
-        classToDelete.value = classItemOrId;
-    } else {
-        classToDelete.value = classes.value.find(c => c.id === classItemOrId) || { id: classItemOrId, name: `ID: ${classItemOrId}`};
-    }
+const confirmDeleteClass = (classId) => {
+    classToDelete.value = classes.value.find(c => c.id === classId);
     showDeleteConfirmModal.value = true;
 };
-
 const deleteClass = async () => {
   if (!classToDelete.value) return;
-  isLoading.value = true; 
   try {
     await apiClient.delete(`/classes/${classToDelete.value.id}`);
     fetchClasses(); 
   } catch (err) {
     console.error('Failed to delete class:', err);
-    error.value = err.response?.data?.msg || 'Failed to delete class'; // Translated
+    classesError.value = err.response?.data?.msg || 'Failed to delete class';
   } finally {
-    isLoading.value = false;
     showDeleteConfirmModal.value = false;
     classToDelete.value = null;
+  }
+};
+
+// === Methods for Programs ===
+const viewProgramDetails = (programId) => {
+  router.push({ name: 'ProgramDetail', params: { id: programId } });
+};
+const openCreateProgramModal = () => {
+  isEditingProgram.value = false;
+  programToEdit.value = null;
+  showProgramModal.value = true;
+};
+const openEditProgramModal = (programItem) => {
+  programToEdit.value = { ...programItem };
+  isEditingProgram.value = true;
+  showProgramModal.value = true;
+};
+const closeProgramModal = () => {
+  showProgramModal.value = false;
+  programToEdit.value = null;
+};
+const handleProgramSaved = () => {
+  fetchPrograms();
+};
+const confirmDeleteProgram = (programId) => {
+    programToDelete.value = programs.value.find(p => p.id === programId);
+    showProgramDeleteConfirmModal.value = true;
+};
+const deleteProgram = async () => {
+  if (!programToDelete.value) return;
+  try {
+    await apiClient.delete(`/programs/${programToDelete.value.id}`);
+    fetchPrograms();
+    fetchClasses();
+  } catch (err) {
+    console.error('Failed to delete program:', err);
+    programsError.value = err.response?.data?.msg || 'Failed to delete program';
+  } finally {
+    showProgramDeleteConfirmModal.value = false;
+    programToDelete.value = null;
   }
 };
 </script>
