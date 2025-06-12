@@ -26,7 +26,7 @@
         <!-- Карточка для добавления нового класса -->
         <div
           @click="openCreateClassModal"
-          class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-gray-50 cursor-pointer text-gray-500 hover:text-blue-600 transition-all duration-300 min-h-[160px]"
+          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 transform hover:scale-105"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -64,7 +64,7 @@
         <!-- Карточка для добавления новой программы -->
          <div
           @click="openCreateProgramModal"
-          class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-gray-50 cursor-pointer text-gray-500 hover:text-green-600 transition-all duration-300 min-h-[160px]"
+          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-green-500 hover:text-green-600 transition-all duration-300 transform hover:scale-105"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -73,7 +73,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Модальные окна для Классов -->
     <ClassForm

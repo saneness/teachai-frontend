@@ -1,9 +1,9 @@
 <template>
   <div 
     @click="$emit('view-details', classItem.id)"
-    class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 cursor-pointer group"
+    class="h-full min-h-[130px] flex flex-col bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 cursor-pointer group"
   >
-    <div class="p-6">
+    <div class="p-6 flex-grow">
       <div class="flex justify-between items-start">
         <!-- Main Info -->
         <div class="flex-grow">
