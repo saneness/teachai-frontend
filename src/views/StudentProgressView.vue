@@ -108,7 +108,6 @@
                         
                         <select 
                           v-model="uploadStates[lesson.id].workType" 
-                          @change="logWorkTypeChange(lesson.id)"
                           class="flex-shrink-0 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="classwork">Classwork</option>
                             <option value="homework">Homework</option>
@@ -181,12 +180,6 @@ const workToDelete = ref(null);
 const classIdFromRoute = computed(() => props.classId);
 const activeLessonId = ref(null);
 
-// ИСПРАВЛЕНО: Эта функция теперь используется в шаблоне, ошибка исчезнет.
-const logWorkTypeChange = (lessonId) => {
-  logger.info(`Work type changed for lesson ID: ${lessonId}. New value: ${uploadStates[lessonId].workType}`);
-  logger.state(uploadStates);
-}
-
 const sortedProgramLessons = computed(() => {
   if (studentProgressData.value?.program?.lessons) {
     return [...studentProgressData.value.program.lessons].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
@@ -220,14 +213,13 @@ const fetchStudentProgress = async () => {
       });
     }
   } catch (err) {
-    logger.error('Failed to fetch student progress', err);
+    console.error(`Failed to fetch student progress for id ${props.studentId}:`, err);
     error.value = err.response?.data?.msg || 'Failed to load student progress data';
   } finally { isLoading.value = false; }
 };
 
 onMounted(fetchStudentProgress);
 
-// ИСПРАВЛЕНО: Восстановлена полная логика функции.
 const saveProgress = async (lessonId, commentType) => {
   isSavingProgress[lessonId][commentType] = true;
   progressErrors[lessonId] = '';
@@ -249,7 +241,7 @@ const saveProgress = async (lessonId, commentType) => {
     progressSuccess[lessonId][commentType] = true;
     setTimeout(() => { progressSuccess[lessonId][commentType] = false; }, 3000);
   } catch (err) {
-    logger.error(`Failed to save progress for lesson ${lessonId}`, err);
+    console.error(`Failed to save progress for lesson ${lessonId}:`, err);
     progressErrors[lessonId] = err.response?.data?.msg || 'Failed to save feedback.';
   } finally {
     isSavingProgress[lessonId][commentType] = false;
@@ -261,20 +253,12 @@ const handleFileUpload = (event, lessonId) => {
   if (file && uploadStates[lessonId]) {
     uploadStates[lessonId].file = file;
     uploadStates[lessonId].error = '';
-    logger.info(`File selected for lesson ID: ${lessonId}`, file.name);
-    logger.state(uploadStates);
   }
 };
 
 const uploadWork = async (lessonId) => {
   const lessonState = uploadStates[lessonId];
-
-  logger.info(`"Upload" button clicked for lesson ID: ${lessonId}`);
-  if (!lessonState || !lessonState.file) {
-    logger.warn('Upload cancelled: lessonState or file is missing.', { lessonState });
-    return;
-  }
-  logger.info('State before upload:', JSON.parse(JSON.stringify(lessonState)));
+  if (!lessonState || !lessonState.file) return;
 
   isUploadingWork.value = true;
   lessonState.error = '';
@@ -303,7 +287,7 @@ const uploadWork = async (lessonId) => {
     
     await fetchStudentProgress(); 
   } catch (err) {
-    logger.error(`Failed to upload work for lesson ${lessonId}`, err);
+    console.error(`Failed to upload work for lesson ${lessonId}:`, err);
     const errorMessage = err.response?.data?.msg || 'Failed to upload file.';
     if (uploadStates[lessonId]) {
       uploadStates[lessonId].error = errorMessage;
@@ -313,7 +297,6 @@ const uploadWork = async (lessonId) => {
   }
 };
 
-// ИСПРАВЛЕНО: Восстановлена полная логика функции.
 const confirmDeleteWork = (work) => {
   workToDelete.value = work;
   showDeleteWorkConfirmModal.value = true;
@@ -325,7 +308,7 @@ const performDeleteWork = async () => {
         await apiClient.delete(`/student-works/${workToDelete.value.id}`);
         await fetchStudentProgress();
     } catch (err) {
-        logger.error('Failed to delete work:', err);
+        console.error('Failed to delete work:', err);
         error.value = 'Failed to delete work.';
     } finally {
         showDeleteWorkConfirmModal.value = false;
@@ -333,7 +316,6 @@ const performDeleteWork = async () => {
     }
 };
 
-// ИСПРАВЛЕНО: Восстановлена полная логика функции.
 const getWorkDownloadUrl = (storedFilename) => {
     return `${apiClient.defaults.baseURL}/student-works/download/${storedFilename}?token=${localStorage.getItem('accessToken')}`;
 };
@@ -342,7 +324,6 @@ const toggleLessonPanel = (lessonId) => {
   activeLessonId.value = activeLessonId.value === lessonId ? null : lessonId;
   
   if (activeLessonId.value === lessonId) {
-    logger.info(`Toggled panel for lesson ID: ${lessonId}. Panel is now open.`);
     if (!uploadStates[lessonId]) {
       uploadStates[lessonId] = {
         file: null,
@@ -350,11 +331,7 @@ const toggleLessonPanel = (lessonId) => {
         workType: 'classwork',
         error: '',
       };
-      logger.info(`Initialized state for lesson ID: ${lessonId}`);
-      logger.state(uploadStates);
     }
-  } else {
-    logger.info(`Toggled panel for lesson ID: ${lessonId}. Panel is now closed.`);
   }
 };
 </script>
