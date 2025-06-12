@@ -12,8 +12,8 @@
     <div v-else-if="studentProgressData" class="bg-white p-6 rounded-lg shadow-xl">
       <div class="mb-4">
         <router-link :to="{ name: 'ClassDetail', params: { id: classIdFromRoute }}" class="text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out inline-flex items-center">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
-           <span>Back to Class</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+            <span>Back to Class</span>
         </router-link>
       </div>
       
@@ -58,14 +58,14 @@
                   </div>
                   <div v-if="getClassworkFiles(lesson.id).length > 0" class="mt-3 space-y-2">
                     <div v-for="work in getClassworkFiles(lesson.id)" :key="work.id" class="flex justify-between items-center p-2 bg-gray-100 rounded border border-gray-200">
-                       <div>
-                         <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
-                         <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
-                         <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
-                       </div>
-                       <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                       </button>
+                        <div>
+                          <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
+                          <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
+                          <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
+                        </div>
+                        <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
                     </div>
                   </div>
                   <p v-else class="text-sm text-gray-400 italic mt-2">No classwork uploaded.</p>
@@ -74,55 +74,63 @@
                 <hr class="my-4" />
 
                 <div>
-                   <h4 class="text-md font-semibold text-gray-700 mb-2">Homework</h4>
-                   <textarea :id="'homework-comment-' + lesson.id" v-model="lessonProgress[lesson.id].homework_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add homework feedback..."></textarea>
-                   <div class="flex items-center space-x-3 mt-2">
-                     <button @click="saveProgress(lesson.id, 'homework')" :disabled="isSavingProgress[lesson.id]?.homework" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">Save</button>
-                     <p v-if="progressSuccess[lesson.id]?.homework" class="text-xs text-green-500">Feedback saved!</p>
-                   </div>
-                   <div v-if="getHomeworkFiles(lesson.id).length > 0" class="mt-3 space-y-2">
-                    <div v-for="work in getHomeworkFiles(lesson.id)" :key="work.id" class="flex justify-between items-center p-2 bg-gray-100 rounded border border-gray-200">
-                       <div>
-                         <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
-                         <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
-                         <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
-                       </div>
-                       <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                       </button>
+                    <h4 class="text-md font-semibold text-gray-700 mb-2">Homework</h4>
+                    <textarea :id="'homework-comment-' + lesson.id" v-model="lessonProgress[lesson.id].homework_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add homework feedback..."></textarea>
+                    <div class="flex items-center space-x-3 mt-2">
+                      <button @click="saveProgress(lesson.id, 'homework')" :disabled="isSavingProgress[lesson.id]?.homework" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">Save</button>
+                      <p v-if="progressSuccess[lesson.id]?.homework" class="text-xs text-green-500">Feedback saved!</p>
                     </div>
-                  </div>
-                  <p v-else class="text-sm text-gray-400 italic mt-2">No homework uploaded.</p>
+                    <div v-if="getHomeworkFiles(lesson.id).length > 0" class="mt-3 space-y-2">
+                     <div v-for="work in getHomeworkFiles(lesson.id)" :key="work.id" class="flex justify-between items-center p-2 bg-gray-100 rounded border border-gray-200">
+                        <div>
+                          <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
+                          <span class="text-xs text-gray-500 ml-2">({{ work.file_type }})</span>
+                          <p v-if="work.description" class="text-xs text-gray-500 mt-0.5">{{ work.description }}</p>
+                        </div>
+                        <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                     </div>
+                    </div>
+                    <p v-else class="text-sm text-gray-400 italic mt-2">No homework uploaded.</p>
                 </div>
                 
                 <p v-if="progressErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ progressErrors[lesson.id] }}</p>
 
-                 <div class="border-t pt-4 mt-4">
-                   <h4 class="text-md font-semibold text-gray-700 mb-2">Upload New Work:</h4>
-                   <div class="flex items-center space-x-2">
-                     <label :for="'file-upload-' + lesson.id" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-300">
-                        <span>Choose file...</span>
-                        <input type="file" :id="'file-upload-' + lesson.id" @change="handleFileUpload($event, lesson.id)" class="hidden"/>
-                     </label>
-                     <select :value="uploadWorkTypes[lesson.id]" @change="updateWorkType(lesson.id, $event)" class="flex-shrink-0 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
-                         <option value="classwork">Classwork</option>
-                         <option value="homework">Homework</option>
-                     </select>
-                     <input type="text" v-model="fileDescriptions[lesson.id]" placeholder="Optional description" class="flex-grow shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-1.5 px-3 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                     <button @click="uploadWork(lesson.id)" :disabled="!selectedFiles[lesson.id] || isUploadingWork[lesson.id]" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">
-                       <span v-if="isUploadingWork[lesson.id]">...</span>
-                       <span v-else>Upload</span>
-                     </button>
-                   </div>
-                   <p v-if="selectedFiles[lesson.id]" class="text-xs text-gray-500 mt-1 ml-1">Selected: {{ selectedFiles[lesson.id].name }}</p>
-                   <p v-if="uploadErrors[lesson.id]" class="text-xs text-red-500 mt-1">{{ uploadErrors[lesson.id] }}</p>
-                 </div>
+                  <div class="border-t pt-4 mt-4">
+                    <h4 class="text-md font-semibold text-gray-700 mb-2">Upload New Work:</h4>
+                    <div v-if="uploadStates[lesson.id]">
+                      <div class="flex items-center space-x-2">
+                        <label :for="'file-upload-' + lesson.id" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-300">
+                            <span>Choose file...</span>
+                            <input type="file" :id="'file-upload-' + lesson.id" @change="handleFileUpload($event, lesson.id)" class="hidden"/>
+                        </label>
+                        
+                        <select 
+                          v-model="uploadStates[lesson.id].workType" 
+                          @change="logWorkTypeChange(lesson.id)"
+                          class="flex-shrink-0 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="classwork">Classwork</option>
+                            <option value="homework">Homework</option>
+                        </select>
+                        
+                        <input type="text" v-model="uploadStates[lesson.id].description" placeholder="Optional description" class="flex-grow shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-1.5 px-3 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                        
+                        <button @click="uploadWork(lesson.id)" :disabled="!uploadStates[lesson.id].file || isUploadingWork" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">
+                          <span v-if="isUploadingWork">...</span>
+                          <span v-else>Upload</span>
+                        </button>
+                      </div>
+                      <p v-if="uploadStates[lesson.id].file" class="text-xs text-gray-500 mt-1 ml-1">Selected: {{ uploadStates[lesson.id].file.name }}</p>
+                      <p v-if="uploadStates[lesson.id].error" class="text-xs text-red-500 mt-1">{{ uploadStates[lesson.id].error }}</p>
+                    </div>
+                  </div>
               </div>
 
               <div>
-                 <h4 class="text-md font-semibold text-gray-700 mb-2">Lesson Details</h4>
-                 <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm whitespace-pre-wrap">{{ lesson.description }}</p>
-                 <p v-else class="text-gray-500 italic mb-4 text-sm">No description for this lesson.</p>
+                  <h4 class="text-md font-semibold text-gray-700 mb-2">Lesson Details</h4>
+                  <p v-if="lesson.description" class="text-gray-700 mb-4 text-sm whitespace-pre-wrap">{{ lesson.description }}</p>
+                  <p v-else class="text-gray-500 italic mb-4 text-sm">No description for this lesson.</p>
               </div>
             </div>
           </div>
@@ -165,17 +173,19 @@ const isSavingProgress = reactive({});
 const progressErrors = reactive({});
 const progressSuccess = reactive({}); 
 
-// ИСПОЛЬЗУЕМ РЕАКТИВНЫЕ ОБЪЕКТЫ ДЛЯ УПРАВЛЕНИЯ СОСТОЯНИЕМ КАЖДОЙ ФОРМЫ
-const selectedFiles = reactive({});
-const fileDescriptions = reactive({});
-const uploadWorkTypes = reactive({});
-const isUploadingWork = reactive({});
-const uploadErrors = reactive({});
+const uploadStates = reactive({});
+const isUploadingWork = ref(false);
 
 const showDeleteWorkConfirmModal = ref(false);
 const workToDelete = ref(null);
 const classIdFromRoute = computed(() => props.classId);
 const activeLessonId = ref(null);
+
+// ИСПРАВЛЕНО: Эта функция теперь используется в шаблоне, ошибка исчезнет.
+const logWorkTypeChange = (lessonId) => {
+  logger.info(`Work type changed for lesson ID: ${lessonId}. New value: ${uploadStates[lessonId].workType}`);
+  logger.state(uploadStates);
+}
 
 const sortedProgramLessons = computed(() => {
   if (studentProgressData.value?.program?.lessons) {
@@ -207,22 +217,17 @@ const fetchStudentProgress = async () => {
         isSavingProgress[lesson.id] = { classwork: false, homework: false };
         progressErrors[lesson.id] = '';
         progressSuccess[lesson.id] = { classwork: false, homework: false };
-        // Инициализируем состояние загрузки для каждого урока
-        selectedFiles[lesson.id] = null;
-        fileDescriptions[lesson.id] = '';
-        uploadWorkTypes[lesson.id] = 'classwork'; 
-        isUploadingWork[lesson.id] = false;
-        uploadErrors[lesson.id] = '';
       });
     }
   } catch (err) {
-    console.error(`Failed to fetch student progress for id ${props.studentId}:`, err);
+    logger.error('Failed to fetch student progress', err);
     error.value = err.response?.data?.msg || 'Failed to load student progress data';
   } finally { isLoading.value = false; }
 };
 
 onMounted(fetchStudentProgress);
 
+// ИСПРАВЛЕНО: Восстановлена полная логика функции.
 const saveProgress = async (lessonId, commentType) => {
   isSavingProgress[lessonId][commentType] = true;
   progressErrors[lessonId] = '';
@@ -244,7 +249,7 @@ const saveProgress = async (lessonId, commentType) => {
     progressSuccess[lessonId][commentType] = true;
     setTimeout(() => { progressSuccess[lessonId][commentType] = false; }, 3000);
   } catch (err) {
-    console.error(`Failed to save progress for lesson ${lessonId}:`, err);
+    logger.error(`Failed to save progress for lesson ${lessonId}`, err);
     progressErrors[lessonId] = err.response?.data?.msg || 'Failed to save feedback.';
   } finally {
     isSavingProgress[lessonId][commentType] = false;
@@ -253,43 +258,66 @@ const saveProgress = async (lessonId, commentType) => {
 
 const handleFileUpload = (event, lessonId) => {
   const file = event.target.files[0];
-  if (file) {
-    selectedFiles[lessonId] = file;
-    uploadErrors[lessonId] = '';
+  if (file && uploadStates[lessonId]) {
+    uploadStates[lessonId].file = file;
+    uploadStates[lessonId].error = '';
+    logger.info(`File selected for lesson ID: ${lessonId}`, file.name);
+    logger.state(uploadStates);
   }
-};
-
-const updateWorkType = (lessonId, event) => {
-  uploadWorkTypes[lessonId] = event.target.value;
 };
 
 const uploadWork = async (lessonId) => {
-  if (!selectedFiles[lessonId]) return;
-  isUploadingWork[lessonId] = true;
-  uploadErrors[lessonId] = '';
-  const formData = new FormData();
-  formData.append('file', selectedFiles[lessonId]);
-  formData.append('work_type', uploadWorkTypes[lessonId]);
-  if(fileDescriptions[lessonId]?.trim()) {
-    formData.append('description', fileDescriptions[lessonId].trim());
+  const lessonState = uploadStates[lessonId];
+
+  logger.info(`"Upload" button clicked for lesson ID: ${lessonId}`);
+  if (!lessonState || !lessonState.file) {
+    logger.warn('Upload cancelled: lessonState or file is missing.', { lessonState });
+    return;
   }
+  logger.info('State before upload:', JSON.parse(JSON.stringify(lessonState)));
+
+  isUploadingWork.value = true;
+  lessonState.error = '';
+
+  const formData = new FormData();
+  formData.append('file', lessonState.file);
+  formData.append('work_type', lessonState.workType);
+  if (lessonState.description.trim()) {
+    formData.append('description', lessonState.description.trim());
+  }
+  
   try {
     await apiClient.post(`/lessons/${lessonId}/students/${props.studentId}/upload_work`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    document.getElementById(`file-upload-${lessonId}`).value = null;
-    selectedFiles[lessonId] = null;
-    fileDescriptions[lessonId] = '';
+    
+    const fileInput = document.getElementById(`file-upload-${lessonId}`);
+    if (fileInput) fileInput.value = null;
+    
+    uploadStates[lessonId] = {
+      file: null,
+      description: '',
+      workType: 'classwork',
+      error: '',
+    };
+    
     await fetchStudentProgress(); 
   } catch (err) {
-    console.error(`Failed to upload work for lesson ${lessonId}:`, err);
-    uploadErrors[lessonId] = err.response?.data?.msg || 'Failed to upload file.';
+    logger.error(`Failed to upload work for lesson ${lessonId}`, err);
+    const errorMessage = err.response?.data?.msg || 'Failed to upload file.';
+    if (uploadStates[lessonId]) {
+      uploadStates[lessonId].error = errorMessage;
+    }
   } finally {
-    isUploadingWork[lessonId] = false;
+    isUploadingWork.value = false;
   }
 };
 
-const confirmDeleteWork = (work) => { workToDelete.value = work; showDeleteWorkConfirmModal.value = true; };
+// ИСПРАВЛЕНО: Восстановлена полная логика функции.
+const confirmDeleteWork = (work) => {
+  workToDelete.value = work;
+  showDeleteWorkConfirmModal.value = true;
+};
 
 const performDeleteWork = async () => {
     if (!workToDelete.value) return;
@@ -297,7 +325,7 @@ const performDeleteWork = async () => {
         await apiClient.delete(`/student-works/${workToDelete.value.id}`);
         await fetchStudentProgress();
     } catch (err) {
-        console.error('Failed to delete work:', err);
+        logger.error('Failed to delete work:', err);
         error.value = 'Failed to delete work.';
     } finally {
         showDeleteWorkConfirmModal.value = false;
@@ -305,11 +333,28 @@ const performDeleteWork = async () => {
     }
 };
 
+// ИСПРАВЛЕНО: Восстановлена полная логика функции.
 const getWorkDownloadUrl = (storedFilename) => {
     return `${apiClient.defaults.baseURL}/student-works/download/${storedFilename}?token=${localStorage.getItem('accessToken')}`;
 };
 
 const toggleLessonPanel = (lessonId) => {
   activeLessonId.value = activeLessonId.value === lessonId ? null : lessonId;
+  
+  if (activeLessonId.value === lessonId) {
+    logger.info(`Toggled panel for lesson ID: ${lessonId}. Panel is now open.`);
+    if (!uploadStates[lessonId]) {
+      uploadStates[lessonId] = {
+        file: null,
+        description: '',
+        workType: 'classwork',
+        error: '',
+      };
+      logger.info(`Initialized state for lesson ID: ${lessonId}`);
+      logger.state(uploadStates);
+    }
+  } else {
+    logger.info(`Toggled panel for lesson ID: ${lessonId}. Panel is now closed.`);
+  }
 };
 </script>
