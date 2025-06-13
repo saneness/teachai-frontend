@@ -22,7 +22,6 @@
           <div v-if="activeLessonId === lesson.id" class="p-3 border-t">
             <p v-if="lesson.description" class="text-sm text-gray-600 whitespace-pre-wrap">{{ lesson.description }}</p>
             <p v-else class="text-sm text-gray-500 italic">No description for this lesson.</p>
-            <p class="text-xs text-gray-400 mt-2">Order: {{ lesson.order === null ? 'N/A' : lesson.order }}</p>
           </div>
         </div>
       </div>

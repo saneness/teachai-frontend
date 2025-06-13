@@ -50,7 +50,7 @@
               <div class="space-y-4">
                 <div>
                   <h4 class="text-md font-semibold text-gray-700 mb-2">Classwork</h4>
-                  <textarea :id="'classwork-comment-' + lesson.id" v-model="lessonProgress[lesson.id].classwork_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add classwork feedback..."></textarea>
+                  <textarea :id="'classwork-comment-' + lesson.id" v-model="lessonProgress[lesson.id].classwork_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-10 resize-y" placeholder="Add classwork feedback..."></textarea>
                   <div class="flex items-center space-x-3 mt-2">
                     <button @click="saveProgress(lesson.id, 'classwork')" :disabled="isSavingProgress[lesson.id]?.classwork" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">Save</button>
                     <p v-if="progressSuccess[lesson.id]?.classwork" class="text-xs text-green-500">Feedback saved!</p>
@@ -74,7 +74,7 @@
 
                 <div>
                     <h4 class="text-md font-semibold text-gray-700 mb-2">Homework</h4>
-                    <textarea :id="'homework-comment-' + lesson.id" v-model="lessonProgress[lesson.id].homework_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add homework feedback..."></textarea>
+                    <textarea :id="'homework-comment-' + lesson.id" v-model="lessonProgress[lesson.id].homework_comment" rows="3" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-10 resize-y" placeholder="Add homework feedback..."></textarea>
                     <div class="flex items-center space-x-3 mt-2">
                       <button @click="saveProgress(lesson.id, 'homework')" :disabled="isSavingProgress[lesson.id]?.homework" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">Save</button>
                       <p v-if="progressSuccess[lesson.id]?.homework" class="text-xs text-green-500">Feedback saved!</p>
@@ -99,24 +99,24 @@
                   <div class="border-t pt-4 mt-4">
                     <h4 class="text-md font-semibold text-gray-700 mb-2">Upload New Work:</h4>
                     <div v-if="uploadStates[lesson.id]">
-                      <div class="flex items-center space-x-2">
-                        <label :for="'file-upload-' + lesson.id" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-300">
-                            <span>Choose file...</span>
-                            <input type="file" :id="'file-upload-' + lesson.id" @change="handleFileUpload($event, lesson.id)" class="hidden"/>
-                        </label>
-                        
-                        <select 
-                          v-model="uploadStates[lesson.id].workType" 
-                          class="flex-shrink-0 shadow-sm appearance-none bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="classwork">Classwork</option>
-                            <option value="homework">Homework</option>
-                        </select>
-                        
+                      <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-2 md:items-center">
+                        <div class="flex items-center space-x-2 md:flex-shrink-0">
+                            <label :for="'file-upload-' + lesson.id" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-200 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-300">
+                                <span>Choose file...</span>
+                                <input type="file" :id="'file-upload-' + lesson.id" @change="handleFileUpload($event, lesson.id)" class="hidden"/>
+                            </label>
+                            
+                            <select v-model="uploadStates[lesson.id].workType" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="classwork">Classwork</option>
+                                <option value="homework">Homework</option>
+                            </select>
+                        </div>
+
                         <input type="text" v-model="uploadStates[lesson.id].description" placeholder="Optional description" class="flex-grow shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-1.5 px-3 text-sm text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                         
-                        <button @click="uploadWork(lesson.id)" :disabled="!uploadStates[lesson.id].file || isUploadingWork" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">
-                          <span v-if="isUploadingWork">...</span>
-                          <span v-else>Upload</span>
+                        <button @click="uploadWork(lesson.id)" :disabled="!uploadStates[lesson.id].file || isUploadingWork" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 w-full md:w-auto">
+                            <span v-if="isUploadingWork">...</span>
+                            <span v-else>Upload</span>
                         </button>
                       </div>
                       <p v-if="uploadStates[lesson.id].file" class="text-xs text-gray-500 mt-1 ml-1">Selected: {{ uploadStates[lesson.id].file.name }}</p>
