@@ -14,6 +14,12 @@
         </div>
         <!-- Action Icons (appear on hover) -->
         <div @click.stop class="flex space-x-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div class="drag-handle cursor-grab text-gray-400 hover:text-gray-600 p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 1a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V4a3 3 0 00-3-3H5z" clip-rule="evenodd" fill-rule="evenodd"/>
+                <path d="M12 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1zm-5 0a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" />
+              </svg>
+            </div>
             <button
                 @click="$emit('edit-program', program)"
                 class="p-2 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-100 rounded-full"

@@ -13,7 +13,7 @@
         <p class="text-red-500 text-lg">Error loading classes: {{ classesError }}</p>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div ref="classesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Список существующих классов -->
         <ClassCard
           v-for="classItem in classes"
@@ -26,7 +26,7 @@
         <!-- Карточка для добавления нового класса -->
         <div
           @click="openCreateClassModal"
-          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 transform hover:scale-105"
+          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 ignore-sort"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -51,7 +51,7 @@
       <div v-else-if="programsError" class="text-center py-10">
         <p class="text-red-500 text-lg">Error loading programs: {{ programsError }}</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div ref="programsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Список существующих программ -->
         <ProgramCard
           v-for="programItem in programs"
@@ -64,7 +64,7 @@
         <!-- Карточка для добавления новой программы -->
          <div
           @click="openCreateProgramModal"
-          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-green-500 hover:text-green-600 transition-all duration-300 transform hover:scale-105"
+          class="h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border-2 border-dashed border-gray-300 cursor-pointer text-gray-500 hover:border-green-500 hover:text-green-600 transition-all duration-300 transform hover:scale-105 ignore-sort"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -117,9 +117,10 @@
 
 <script setup>
 // ... (скрипт остается таким же, как в предыдущей версии, вся логика уже на месте)
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '../services/api';
+import Sortable from 'sortablejs';
 
 import ClassCard from '../components/ClassCard.vue';
 import ClassForm from '../components/ClassForm.vue';
@@ -130,6 +131,7 @@ const router = useRouter();
 
 // === State for Classes ===
 const classes = ref([]);
+const classesContainer = ref(null);
 const isClassesLoading = ref(true);
 const classesError = ref(null);
 const showClassModal = ref(false);
@@ -140,6 +142,7 @@ const classToDelete = ref(null);
 
 // === State for Programs ===
 const programs = ref([]);
+const programsContainer = ref(null);
 const isProgramsLoading = ref(true);
 const programsError = ref(null);
 const showProgramModal = ref(false);
@@ -180,6 +183,77 @@ const fetchPrograms = async () => {
 onMounted(() => {
     Promise.all([fetchClasses(), fetchPrograms()]);
 });
+
+watch(classesContainer, (newEl) => {
+    if (newEl) {
+        new Sortable(newEl, {
+            animation: 150,
+            handle: '.drag-handle',
+            filter: '.ignore-sort',
+            onMove: function (evt) {
+              // Запрещаем "приземляться" на карточку добавления
+              // evt.related - это элемент, НАД которым мы сейчас тащим
+              return evt.related.className.indexOf('ignore-sort') === -1;
+            },
+            onEnd: handleClassDragEnd,
+        });
+    }
+});
+
+// Инициализация Sortable для Программ
+watch(programsContainer, (newEl) => {
+    if (newEl) {
+        new Sortable(newEl, {
+            animation: 150,
+            handle: '.drag-handle',
+            filter: '.ignore-sort',
+            onMove: function (evt) {
+              // Запрещаем "приземляться" на карточку добавления
+              // evt.related - это элемент, НАД которым мы сейчас тащим
+              return evt.related.className.indexOf('ignore-sort') === -1;
+            },
+            onEnd: handleProgramDragEnd,
+        });
+    }
+});
+
+// Обработчик перетаскивания для Классов
+const handleClassDragEnd = (evt) => {
+    const item = classes.value.splice(evt.oldIndex, 1)[0];
+    classes.value.splice(evt.newIndex, 0, item);
+    saveNewClassOrder();
+};
+
+// Обработчик перетаскивания для Программ
+const handleProgramDragEnd = (evt) => {
+    const item = programs.value.splice(evt.oldIndex, 1)[0];
+    programs.value.splice(evt.newIndex, 0, item);
+    saveNewProgramOrder();
+};
+
+// Сохранение нового порядка Классов на сервере
+const saveNewClassOrder = async () => {
+    const ordered_ids = classes.value.map(c => c.id);
+    try {
+        await apiClient.post('/classes/update-order', { ordered_ids });
+    } catch (err) {
+        console.error('Failed to save class order:', err);
+        classesError.value = "Could not save order. Please refresh.";
+        fetchClasses(); // В случае ошибки, перезагружаем с сервера
+    }
+};
+
+// Сохранение нового порядка Программ на сервере
+const saveNewProgramOrder = async () => {
+    const ordered_ids = programs.value.map(p => p.id);
+    try {
+        await apiClient.post('/programs/update-order', { ordered_ids });
+    } catch (err) {
+        console.error('Failed to save program order:', err);
+        programsError.value = "Could not save order. Please refresh.";
+        fetchPrograms(); // В случае ошибки, перезагружаем с сервера
+    }
+};
 
 // === Methods for Classes ===
 const viewClassDetails = (classId) => {
