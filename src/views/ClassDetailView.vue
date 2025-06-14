@@ -50,8 +50,24 @@
         </div>
 
         <div>
-          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Current Program Menu</h2> 
-          <ProgramMenu :lessons="classData.program_details ? classData.program_details.lessons : []" />
+          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Program Lessons</h2>
+          <div v-if="sortedProgramLessons && sortedProgramLessons.length > 0" class="bg-gray-50 p-4 rounded-md">
+            <ul class="space-y-2">
+              <li
+                v-for="lesson in sortedProgramLessons"
+                :key="lesson.id"
+                class="p-3 bg-white rounded shadow-sm border border-gray-200 hover:bg-gray-50"
+              >
+                <router-link
+                  :to="{ name: 'LessonProgress', params: { classId: classData.id, lessonId: lesson.id }}"
+                  class="font-medium text-blue-600 hover:text-blue-800"
+                >
+                  {{ lesson.topic }}
+                </router-link>
+              </li>
+            </ul>
+          </div>
+          <p v-else class="text-gray-500 italic">No lessons in the assigned program.</p>
         </div>
       </div>
 
@@ -67,9 +83,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; 
+import { ref, onMounted, computed } from 'vue'; 
 import apiClient from '../services/api';
-import ProgramMenu from '../components/ProgramMenu.vue'; 
+// import ProgramMenu from '../components/ProgramMenu.vue'; 
 
 const props = defineProps({
   id: {
@@ -107,4 +123,11 @@ const fetchClassDetails = async () => {
   }
 };
 onMounted(fetchClassDetails);
+
+const sortedProgramLessons = computed(() => {
+  if (classData.value?.program_details?.lessons) {
+    return [...classData.value.program_details.lessons].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+  }
+  return [];
+});
 </script>

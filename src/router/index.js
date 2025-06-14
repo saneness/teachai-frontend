@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
-import DashboardView from '../views/DashboardView.vue'; // Главная страница
+import DashboardView from '../views/DashboardView.vue';
 import ClassDetailView from '../views/ClassDetailView.vue';
 import ProgramDetailView from '../views/ProgramDetailView.vue'; 
 import StudentProgressView from '../views/StudentProgressView.vue';
+import LessonProgressView from '../views/LessonProgressView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 
 const routes = [
@@ -18,7 +19,15 @@ const routes = [
   { path: '/class/:id', name: 'ClassDetail', component: ClassDetailView, props: true, meta: { requiresAuth: true } },
   { path: '/program/:id', name: 'ProgramDetail', component: ProgramDetailView, props: true, meta: { requiresAuth: true } },
   { path: '/class/:classId/student/:studentId', name: 'StudentProgress', component: StudentProgressView, props: true, meta: { requiresAuth: true } },
-  
+  {
+    path: '/classes/:classId/lessons/:lessonId',
+    name: 'LessonProgress',
+    component: LessonProgressView,
+    props: (route) => ({
+      classId: parseInt(route.params.classId, 10),
+      lessonId: parseInt(route.params.lessonId, 10)
+    }),
+  },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView, }
 ];
 
