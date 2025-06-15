@@ -6,11 +6,11 @@
       </button>
       <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h2>
       <form @submit.prevent="submitForm">
-        <!-- ... (содержимое полей формы остается без изменений) ... -->
         <div class="mb-4">
           <label for="className" class="block text-gray-700 text-sm font-semibold mb-2">Class Name:</label>
           <input type="text" id="className" v-model="editableClass.name" required class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"/>
         </div>
+
         <div class="mb-4">
           <label for="programName" class="block text-gray-700 text-sm font-semibold mb-2">Program:</label>
           <div>
@@ -23,10 +23,12 @@
             <p v-if="!isEditing && availablePrograms.length === 0 && !isProgramsLoading" class="text-xs text-red-500 mt-1">You need to create a program before you can assign it to a class.</p>
           </div>
         </div>
-        <div class="mb-6">
+
+        <div v-if="!isEditing" class="mb-6">
           <label for="students" class="block text-gray-700 text-sm font-semibold mb-2">Students (one name per line):</label>
           <textarea id="students" v-model="studentsText" rows="5" class="shadow-sm appearance-none bg-white border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Doe&#10;Jane Smith&#10;Peter Jones"></textarea>
         </div>
+        
         <div v-if="formError" class="mb-4 text-red-500 text-sm">{{ formError }}</div>
 
         <div class="flex justify-end space-x-3">
@@ -38,7 +40,6 @@
       </form>
     </div>
     
-    <!-- Модальные окна подтверждения -->
     <div v-if="showProgramChangeConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h3 class="text-xl font-semibold text-yellow-600 mb-4">Warning: Change Program</h3>
@@ -66,15 +67,18 @@
 import { ref, onMounted, computed } from 'vue'; 
 import apiClient from '../services/api';
 
-const props = defineProps({ classToEdit: { type: Object, default: null, }, isEditing: { type: Boolean, default: false, }, });
+const props = defineProps({
+  classToEdit: { type: Object, default: null },
+  isEditing: { type: Boolean, default: false },
+});
 const emit = defineEmits(['close', 'class-saved']);
 
 const editableClass = ref({ id: null, name: '', program_name: null });
-const studentsText = ref(''); 
-const formError = ref(''); 
+const studentsText = ref('');
+const formError = ref('');
 const isLoading = ref(false);
 const availablePrograms = ref([]);
-const isProgramsLoading = ref(false); 
+const isProgramsLoading = ref(false);
 
 const originalProgramName = ref(null);
 const showProgramChangeConfirmModal = ref(false);
@@ -84,7 +88,7 @@ const initialFormState = ref('');
 const showDiscardConfirmModal = ref(false);
 
 const isFormDirty = computed(() => {
-    if (initialFormState.value === '') return false; // Don't check if initial state is not set
+    if (initialFormState.value === '') return false;
     const currentState = JSON.stringify({
         name: editableClass.value.name,
         program_name: editableClass.value.program_name,
@@ -108,7 +112,7 @@ const fetchAvailablePrograms = async () => {
     availablePrograms.value = response.data;
   } catch (error) {
     console.error("Failed to fetch programs:", error);
-    formError.value = "Could not load available programs."; 
+    formError.value = "Could not load available programs.";
   } finally {
     isProgramsLoading.value = false;
   }
@@ -119,9 +123,6 @@ onMounted(async () => {
   if (props.isEditing && props.classToEdit) {
     editableClass.value = { ...props.classToEdit };
     originalProgramName.value = props.classToEdit.program_name; 
-    if (props.classToEdit.students && Array.isArray(props.classToEdit.students)) {
-        studentsText.value = props.classToEdit.students.map(s => s.name || s).join('\n');
-    } else { studentsText.value = ''; }
   } else { 
     if (availablePrograms.value.length > 0) {
         editableClass.value.program_name = null;
@@ -160,8 +161,14 @@ const handleBackdropClick = () => {
   else { closeForm(); }
 };
 
-const confirmDiscard = () => { showDiscardConfirmModal.value = false; closeForm(); };
-const cancelDiscard = () => { showDiscardConfirmModal.value = false; };
+const confirmDiscard = () => {
+  showDiscardConfirmModal.value = false;
+  closeForm();
+};
+
+const cancelDiscard = () => {
+  showDiscardConfirmModal.value = false;
+};
 
 const submitForm = async () => {
   formError.value = ''; 
@@ -170,12 +177,16 @@ const submitForm = async () => {
   if (!props.isEditing && availablePrograms.value.length === 0 && !isProgramsLoading.value) { formError.value = 'Cannot create class: No programs available.'; return; }
 
   isLoading.value = true;
-  const studentNames = studentsText.value.split('\n').map(name => name.trim()).filter(name => name);
+
   const payload = {
     name: editableClass.value.name,
-    students: studentNames,
     program_name: editableClass.value.program_name
   };
+  
+  if (!props.isEditing) {
+    const studentNames = studentsText.value.split('\n').map(name => name.trim()).filter(name => name);
+    payload.students = studentNames;
+  }
   
   try {
     if (props.isEditing) {
@@ -191,6 +202,8 @@ const submitForm = async () => {
     else if (error.request) { formError.value = 'Network Error: Could not connect to the server.'; } 
     else { formError.value = `Error ${props.isEditing ? 'updating' : 'creating'} class.`; }
     console.error('Class form error:', error);
-  } finally { isLoading.value = false; }
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
