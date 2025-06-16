@@ -41,7 +41,7 @@
           </div>
           
           <div v-if="activeStudentId === student.id" class="p-4 border-t bg-white">
-             <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
+              <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
                 <div class="space-y-4">
                   <div>
                       <h4 class="text-md font-semibold text-gray-700 mb-2">Classwork</h4>
@@ -51,13 +51,16 @@
                           <p v-if="progressSuccess[student.id]?.classwork" class="text-xs text-green-500">Feedback saved!</p>
                       </div>
                       <div v-if="getClassworkFiles(student.id).length > 0" class="mt-3 space-y-2">
-                          <div v-for="work in getClassworkFiles(student.id)" :key="work.id" class="flex justify-between items-center p-2 bg-gray-100 rounded border border-gray-200">
-                              <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
-                              <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                              </button>
+                          <div v-for="work in getClassworkFiles(student.id)" :key="work.id" class="p-2 bg-gray-100 rounded border border-gray-200">
+                              <div class="flex justify-between items-center">
+                                  <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium text-sm" :download="work.original_filename">{{ work.original_filename }}</a>
+                                  <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
+                                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                  </button>
+                              </div>
+                              <p v-if="work.description" class="text-xs text-gray-600 mt-1 pl-1">{{ work.description }}</p>
                           </div>
-                      </div>
+                          </div>
                       <p v-else class="text-sm text-gray-400 italic mt-2">No classwork uploaded.</p>
                   </div>
                   
@@ -71,13 +74,16 @@
                           <p v-if="progressSuccess[student.id]?.homework" class="text-xs text-green-500">Feedback saved!</p>
                       </div>
                       <div v-if="getHomeworkFiles(student.id).length > 0" class="mt-3 space-y-2">
-                           <div v-for="work in getHomeworkFiles(student.id)" :key="work.id" class="flex justify-between items-center p-2 bg-gray-100 rounded border border-gray-200">
-                              <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium" :download="work.original_filename">{{ work.original_filename }}</a>
-                              <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                              </button>
+                           <div v-for="work in getHomeworkFiles(student.id)" :key="work.id" class="p-2 bg-gray-100 rounded border border-gray-200">
+                              <div class="flex justify-between items-center">
+                                <a :href="getWorkDownloadUrl(work.stored_filename)" target="_blank" class="text-blue-600 hover:underline font-medium text-sm" :download="work.original_filename">{{ work.original_filename }}</a>
+                                <button @click="confirmDeleteWork(work)" class="text-red-500 hover:text-red-700 ml-2 p-1 rounded hover:bg-red-100" title="Delete work">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                </button>
+                              </div>
+                              <p v-if="work.description" class="text-xs text-gray-600 mt-1 pl-1">{{ work.description }}</p>
                           </div>
-                      </div>
+                          </div>
                       <p v-else class="text-sm text-gray-400 italic mt-2">No homework uploaded.</p>
                   </div>
 
@@ -108,7 +114,7 @@
                     </div>
                   </div>
                 </div>
-            </div>
+              </div>
           </div>
         </div>
       </div>
